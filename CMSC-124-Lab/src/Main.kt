@@ -7,14 +7,26 @@ enum class Operator(val symbol: String) {
     NOT("!"),
     AND("&&"),
     OR("||"),
-
+    INCREMENT("++"),
+    DECREMENT("--"),
     ASSIGN("="),
 
     PLUS("+"),
     MINUS("-"),
     MULTIPLY("*"),
     DIVIDE("/"),
-    MODULO("%")
+    MODULO("%"),
+    EXPONENT ("^")
+}
+
+enum class Delimiter(val symbol: String) {
+    L_PAREN("("),
+    R_PAREN(")"),
+    L_BRACKET("["),
+    R_BRACKET("]"),
+    L_BRACE("{"),
+    R_BRACE("}"),
+    COMMA(",")
 }
 
 enum class PrimitiveType(val keyword: String) {
@@ -28,6 +40,7 @@ enum class PrimitiveType(val keyword: String) {
 
 
 val operators = Operator.entries.map { it.symbol }.toSet()
+val delimiters = Delimiter.entries.map { it.symbol}.toSet()
 val data_types = PrimitiveType.entries.map { it.keyword }.toSet()
 
 
@@ -51,15 +64,14 @@ class Line(val content: String, val line_num: Int){
     fun constructTokens(){
         while (index < content.length){
             var char = content[index]
-            var next_char: Char? = content.getOrNull(index + 1)
+            //var next_char: Char? = content.getOrNull(index + 1)
 
             when {
                 char.isLetter() -> formWord()
                 char.isDigit() -> formNumber()
-                char.isWhitespace() -> print("$char is whitespace")
+                char.isWhitespace() -> print("$char is whitespace\n")
                 else -> formSymbol()
             }
-
             index++
         }
     }
@@ -67,7 +79,7 @@ class Line(val content: String, val line_num: Int){
     fun formWord() {
         val start = index
         while (index < content.length){
-            if (content[index].isWhitespace() || content[index].toString() in operators){
+            if (content[index].isWhitespace() || content[index].toString() in operators + delimiters){
                 index--
                 tokenize(content.slice(start..index))
                 return
@@ -107,23 +119,23 @@ class Line(val content: String, val line_num: Int){
     }
 
     fun formSymbol() {
-        val start = index
-        while (index < content.length){
-            if (content[index].isWhitespace() || content[index].isLetter() || content[index].isDigit()){
-                index--
-                tokenize(content.slice(start..index), "SYMBOL")
+        if (content[index].isWhitespace() || content[index].isLetter() || content[index].isDigit()) return
+
+        if (index + 1 < content.length) {
+            val twoOpChars = content.slice(index..index + 1)
+            if (identifySymbol(twoOpChars) != null) {
+                tokenize(twoOpChars, "SYMBOL")
+                index += 2
                 return
             }
-
-            index++
         }
-        index--
-        tokenize(content.slice(start..index), "SYMBOL")
-        return
+
+        tokenize (content[index].toString(), "SYMBOL")
     }
 
     fun identifySymbol(lexeme: String): String?{
         return Operator.entries.find { it.symbol == lexeme }?.name
+            ?: Delimiter.entries.find { it.symbol == lexeme }?.name
     }
 
     fun tokenize(lexeme: String, type: String? = null){
@@ -148,7 +160,7 @@ data class Token(val type: String, val lexeme: String, val literal: String?)
 fun main() {
     val mainFile = File()
 
-    print("Enter one line of code: ")
+    print(">>")
     val user_input = readLine() ?:""
 
     mainFile.add(user_input)
