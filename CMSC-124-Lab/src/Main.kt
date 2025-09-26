@@ -168,11 +168,3 @@ fun main() {
 
 }
 
-//when {
-//    char.isLetter() -> print("$char is a letter")
-//    char.isDigit() -> print("$char is a digit")
-//    char.isWhitespace() -> print("$char is whitespace")
-//    else -> print("$char is a symbol")
-//}
-//
-//println(" | Next is $next_char")
