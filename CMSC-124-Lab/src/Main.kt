@@ -77,7 +77,9 @@ class Line(val content: String, val lineNum: Int){
             //var nextChar: Char? = content.getOrNull(index + 1)
 
             when {
-                char == '/' && content.getOrNull(index+1)=='/' ->{
+                (char == '/' && content.getOrNull(index+1)=='/') ||
+                ((char =='/' && content.getOrNull(index+1) == '*') &&
+                ((content.getOrNull(content.length-2)=='*' && content.getOrNull(content.length-1)=='/'))) ->{
                     index = content.length
                     break
                 }
