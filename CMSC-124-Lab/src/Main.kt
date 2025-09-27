@@ -1,6 +1,5 @@
 import kotlin.system.exitProcess
 
-
 enum class Operator(val symbol: String) {
     LESSER("<"),
     GREATER(">"),
@@ -77,11 +76,12 @@ class Line(val content: String, val lineNum: Int){
             //var nextChar: Char? = content.getOrNull(index + 1)
 
             when {
-                (char == '/' && content.getOrNull(index+1)=='/') ||
-                ((char =='/' && content.getOrNull(index+1) == '*') &&
-                ((content.getOrNull(content.length-2)=='*' && content.getOrNull(content.length-1)=='/'))) ->{
-                    index = content.length
-                    break
+                char == '/' -> {
+                    when {
+                        content.getOrNull(index + 1) == '/' -> index = content.length
+                        content.getOrNull(index + 1) == '*' -> checkBlockComment()
+                        else -> formSymbol()
+                    }
                 }
                 char.isLetter() -> formWord()
                 char.isDigit() -> formNumber()
@@ -158,6 +158,17 @@ class Line(val content: String, val lineNum: Int){
         }
     }
 
+    fun checkBlockComment() {
+        index += 2
+        while (index + 1 < content.length){
+            if (content[index] == '*' && content[index+1] == '/'){
+                index += 2
+                return
+            }
+            index++
+        }
+        displayErrorMsg("SYNTAX", "BLOCK_COMMENT",null)
+    }
 
     fun identifySymbol(lexeme: String): String?{
         return Operator.entries.find { it.symbol == lexeme }?.name
@@ -195,6 +206,7 @@ class Line(val content: String, val lineNum: Int){
             tokenType == "INT_NUMBER" -> println("$SyntaxErrorMsg cannot start identifier with a number at line $lineNum")
             tokenType == "FLOAT_NUMBER" -> println("$SyntaxErrorMsg improper number format at line $lineNum")
             tokenType == "SYMBOL" -> println("$SyntaxErrorMsg unexpected symbol $errorSymbol at line $lineNum")
+            tokenType == "BLOCK_COMMENT" -> println("$SyntaxErrorMsg unterminated block comment")
         }
     }
 }
@@ -208,7 +220,6 @@ fun main() {
     val user_input = readLine() ?:""
 
     mainFile.add(user_input)
-
 
 }
 
