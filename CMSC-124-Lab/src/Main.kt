@@ -190,7 +190,6 @@ class Line(val content: String, val lineNum: Int){
     fun identifySyntaxErrorMsg(tokenType: String, errorSymbol: String?){
         val SyntaxErrorMsg: String = "SyntaxError:"
         when{
-            tokenType == "DATA_TYPE" -> println("$SyntaxErrorMsg variables cannot contain symbols at line $lineNum")
             tokenType == "INT_NUMBER" -> println("$SyntaxErrorMsg cannot start identifier with a number at line $lineNum")
             tokenType == "FLOAT_NUMBER" -> println("$SyntaxErrorMsg improper number format at line $lineNum")
             tokenType == "SYMBOL" -> println("$SyntaxErrorMsg unexpected symbol $errorSymbol at line $lineNum")
