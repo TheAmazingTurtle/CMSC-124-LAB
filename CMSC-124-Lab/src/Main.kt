@@ -72,14 +72,14 @@ class Line(val content: String, val lineNum: Int){
 
     fun constructTokens(){
         while (index < content.length){
-            var char = content[index]
-            //var nextChar: Char? = content.getOrNull(index + 1)
+            val char = content[index]
+            val nextChar: Char? = content.getOrNull(index + 1)
 
             when {
                 char == '/' -> {
-                    when {
-                        content.getOrNull(index + 1) == '/' -> index = content.length
-                        content.getOrNull(index + 1) == '*' -> checkBlockComment()
+                    when (nextChar) {
+                        '/' -> index = content.length
+                        '*' -> checkBlockComment()
                         else -> formSymbol()
                     }
                 }
