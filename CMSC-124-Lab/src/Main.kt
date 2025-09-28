@@ -53,7 +53,7 @@ val delimiters = Delimiter.entries.map { it.symbol}.toSet()
 val data_types = PrimitiveType.entries.map { it.keyword }.toSet()
 
 
-class File(){
+class CodeFile(){
     val lines = mutableListOf<Line>()
 
     fun add(line: String){
@@ -214,7 +214,7 @@ class Line(val content: String, val lineNum: Int){
 data class Token(val type: Any, val lexeme: String, val literal: String?)
 
 fun main() {
-    val mainFile = File()
+    val mainFile = CodeFile()
 
     print(">>")
     val user_input = readLine() ?:""
