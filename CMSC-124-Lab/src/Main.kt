@@ -17,7 +17,7 @@ enum class Operator(val symbol: String) {
     MULTIPLY("*"),
     DIVIDE("/"),
     MODULO("%"),
-    EXPONENT ("^"),
+    POWER ("**"),
 
     //COMPOUND OPERATORS
     INCREMENT("++"),
@@ -222,6 +222,3 @@ fun main() {
     mainFile.add(user_input)
 
 }
-
-
-// test intelliJ commit
