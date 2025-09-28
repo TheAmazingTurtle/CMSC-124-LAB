@@ -44,7 +44,8 @@ enum class KeySymbol(val symbol: String, val tokenCategory: TokenCategory): Toke
 
     // Comment
     ONE_LINE_COMMENT("//", TokenCategory.COMMENT),
-    MULTI_LINE_COMMENT("/*", TokenCategory.COMMENT)
+    MULTI_LINE_COMMENT_OPEN("/*", TokenCategory.COMMENT),
+    MULTI_LINE_COMMENT_CLOSE("/*", TokenCategory.COMMENT)
 }
 
 enum class Keyword(val word: String, val tokenCategory: TokenCategory): TokenType  {
@@ -95,12 +96,12 @@ class Line(val content: String, val lineNum: Int){
             val nextChar: Char? = content.getOrNull(index + 1)
 
             when {
-                oneLineCommentFound -> break
-                multiLineCommentActive -> findCommentTerminator()
-                char.isLetter() -> formWord()
-                char.isDigit() -> formNumber()
-                char.isWhitespace() -> index++                              // skip
-                else -> formSymbol()
+                oneLineCommentFound     -> break
+                multiLineCommentActive  -> findCommentTerminator()
+                char.isLetter()         -> formWord()
+                char.isDigit()          -> formNumber()
+                char.isWhitespace()     -> index++                              // skip
+                else                    -> formSymbol()
             }
         }
         tokens.add(Token("EOF", "", null))
@@ -124,12 +125,12 @@ class Line(val content: String, val lineNum: Int){
             val char = content[index]
 
             when {
-                char.isDigit() -> {}    // skip
-                char == '.' -> {
-                    if (seenDot) displayErrorMsg("SYNTAX", type, null)
-                    seenDot = true
-                    type = "FLOAT_NUMBER"
-                }
+                char.isDigit()  -> {}    // skip
+                char == '.'     ->  {
+                                        if (seenDot) displayErrorMsg("SYNTAX", type, null)
+                                        seenDot = true
+                                        type = "FLOAT_NUMBER"
+                                    }
                 char.isLetter() -> displayErrorMsg("SYNTAX", type, null)
                 else -> break           // stops when meeting a symbol or whitespace
             }
@@ -150,7 +151,6 @@ class Line(val content: String, val lineNum: Int){
         }
 
         val stringedSymbol = content.substring(start, index)
-        println(stringedSymbol)
         tokenize(stringedSymbol)
     }
 
@@ -158,27 +158,21 @@ class Line(val content: String, val lineNum: Int){
         val symbolType = KeySymbol.entries.find { it.symbol == lexeme }?.name
 
         when {
-            symbolType == null                  -> displayErrorMsg("SYNTAX","SYMBOL",lexeme)
-            symbolType == "ONE_LINE_COMMENT"    -> oneLineCommentFound = true
-            symbolType == "MULTI_LINE_COMMENT"  -> multiLineCommentActive = !multiLineCommentActive
-            else                                -> tokens.add(Token(symbolType, lexeme, null))
+            symbolType == null                      -> displayErrorMsg("SYNTAX","SYMBOL",lexeme)
+            symbolType == "ONE_LINE_COMMENT"        -> oneLineCommentFound = true
+            symbolType == "MULTI_LINE_COMMENT_OPEN" -> multiLineCommentActive = true
+            else                                    -> tokens.add(Token(symbolType, lexeme, null))
         }
     }
 
     fun findCommentTerminator(){
-        val start = index
-
-        index++
-        val nextChar = content.getOrNull(index)
-        if (nextChar != null && !nextChar.isWhitespace() && !nextChar.isLetterOrDigit()){
+        while (index < content.length && multiLineCommentActive){
+            if (content[index] == '*' && content.getOrNull(index + 1) == '/') {
+                multiLineCommentActive = false
+                index += 2  // skip over */
+                return
+            }
             index++
-        }
-
-        val stringedSymbol = content.substring(start, index)
-        val symbolType = KeySymbol.entries.find { it.symbol == stringedSymbol }?.name
-
-        if (symbolType == "MULTI_LINE_COMMENT") {
-            multiLineCommentActive = !multiLineCommentActive
         }
     }
 
