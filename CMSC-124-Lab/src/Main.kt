@@ -1,8 +1,6 @@
 import kotlin.system.exitProcess
 
-sealed interface TokenType
-
-enum class KeySymbol(val symbol: String): TokenType {
+enum class KeySymbol(val symbol: String) {
     // Logical Operators
     LESSER("<"),
     GREATER(">"),
@@ -48,7 +46,7 @@ enum class KeySymbol(val symbol: String): TokenType {
     MULTI_LINE_COMMENT_CLOSE("/*")
 }
 
-enum class Keyword(val word: String): TokenType  {
+enum class Keyword(val word: String)  {
     // DATA_TYPE
     INT_DATA_TYPE("int"),
     CHAR_DATA_TYPE("char"),
