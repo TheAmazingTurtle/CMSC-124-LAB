@@ -2,67 +2,61 @@ import kotlin.system.exitProcess
 
 sealed interface TokenType
 
-enum class KeySymbol(val symbol: String, val tokenCategory: TokenCategory): TokenType {
+enum class KeySymbol(val symbol: String): TokenType {
     // Logical Operators
-    LESSER("<", TokenCategory.LOGIC_OPERATOR),
-    GREATER(">", TokenCategory.LOGIC_OPERATOR),
-    LESSER_EQUAL("<=", TokenCategory.LOGIC_OPERATOR),
-    GREATER_EQUAL(">=", TokenCategory.LOGIC_OPERATOR),
-    EQUAL("==", TokenCategory.LOGIC_OPERATOR),
-    NOT("!", TokenCategory.LOGIC_OPERATOR),
-    AND("&&", TokenCategory.LOGIC_OPERATOR),
-    OR("||", TokenCategory.LOGIC_OPERATOR),
+    LESSER("<"),
+    GREATER(">"),
+    LESSER_EQUAL("<="),
+    GREATER_EQUAL(">="),
+    EQUAL("=="),
+    NOT("!"),
+    AND("&&"),
+    OR("||"),
 
     // Assignment Operators
-    ASSIGN("=", TokenCategory.ASSIGN_OPERATOR),
-    PLUS_ASSIGN("+=", TokenCategory.ASSIGN_OPERATOR),
-    MINUS_ASSIGN("-=", TokenCategory.ASSIGN_OPERATOR),
-    DIVIDE_ASSIGN("/=", TokenCategory.ASSIGN_OPERATOR),
-    MODULO_ASSIGN("%=", TokenCategory.ASSIGN_OPERATOR),
+    ASSIGN("="),
+    PLUS_ASSIGN("+="),
+    MINUS_ASSIGN("-="),
+    DIVIDE_ASSIGN("/="),
+    MODULO_ASSIGN("%="),
 
     // Arithmetic Operators
-    PLUS("+", TokenCategory.ARITHMETIC_OPERATOR),
-    MINUS("-", TokenCategory.ARITHMETIC_OPERATOR),
-    MULTIPLY("*", TokenCategory.ARITHMETIC_OPERATOR),
-    DIVIDE("/", TokenCategory.ARITHMETIC_OPERATOR),
-    MODULO("%", TokenCategory.ARITHMETIC_OPERATOR),
-    POWER ("**", TokenCategory.ARITHMETIC_OPERATOR),
+    PLUS("+"),
+    MINUS("-"),
+    MULTIPLY("*"),
+    DIVIDE("/"),
+    MODULO("%"),
+    POWER ("**"),
 
     // INCR/DECR
-    INCREMENT("++", TokenCategory.INCREMENT),
-    DECREMENT("--", TokenCategory.INCREMENT),
+    INCREMENT("++"),
+    DECREMENT("--"),
 
     // Delimiters
-    L_PAREN("(", TokenCategory.DELIMITER),
-    R_PAREN(")", TokenCategory.DELIMITER),
-    L_BRACKET("[", TokenCategory.DELIMITER),
-    R_BRACKET("]", TokenCategory.DELIMITER),
-    L_BRACE("{", TokenCategory.DELIMITER),
-    R_BRACE("}", TokenCategory.DELIMITER),
-    COMMA(",", TokenCategory.DELIMITER),
-    DOT(".", TokenCategory.DELIMITER),
+    L_PAREN("("),
+    R_PAREN(")"),
+    L_BRACKET("["),
+    R_BRACKET("]"),
+    L_BRACE("{"),
+    R_BRACE("}"),
+    COMMA(","),
+    DOT("."),
 
     // Comment
-    ONE_LINE_COMMENT("//", TokenCategory.COMMENT),
-    MULTI_LINE_COMMENT_OPEN("/*", TokenCategory.COMMENT),
-    MULTI_LINE_COMMENT_CLOSE("/*", TokenCategory.COMMENT)
+    ONE_LINE_COMMENT("//"),
+    MULTI_LINE_COMMENT_OPEN("/*"),
+    MULTI_LINE_COMMENT_CLOSE("/*")
 }
 
-enum class Keyword(val word: String, val tokenCategory: TokenCategory): TokenType  {
+enum class Keyword(val word: String): TokenType  {
     // DATA_TYPE
-    INT_DATA_TYPE("int", TokenCategory.DATA_TYPE),
-    CHAR_DATA_TYPE("char", TokenCategory.DATA_TYPE),
-    FLOAT_DATA_TYPE("float", TokenCategory.DATA_TYPE),
-    DOUBLE_DATA_TYPE("double", TokenCategory.DATA_TYPE),
-    STRING_DATA_TYPE("String", TokenCategory.DATA_TYPE),
-    BOOLEAN_DATA_TYPE("boolean", TokenCategory.DATA_TYPE)
+    INT_DATA_TYPE("int"),
+    CHAR_DATA_TYPE("char"),
+    FLOAT_DATA_TYPE("float"),
+    DOUBLE_DATA_TYPE("double"),
+    STRING_DATA_TYPE("String"),
+    BOOLEAN_DATA_TYPE("boolean")
 }
-
-enum class TokenCategory {
-    ARITHMETIC_OPERATOR, LOGIC_OPERATOR, ASSIGN_OPERATOR, DELIMITER, INCREMENT, COMMENT,
-    DATA_TYPE
-}
-
 
 val keySymbolMap = KeySymbol.entries.associateBy { it.symbol }
 fun isSymbol(lexeme: String): Boolean = keySymbolMap.containsKey(lexeme)
@@ -153,17 +147,6 @@ class Line(val content: String, val lineNum: Int){
         tokenize(stringedSymbol)
     }
 
-    fun identifySymbol(lexeme: String) {
-        val symbolType = KeySymbol.entries.find { it.symbol == lexeme }?.name
-
-        when {
-            symbolType == null                      -> displayErrorMsg("SYNTAX","SYMBOL",lexeme)
-            symbolType == "ONE_LINE_COMMENT"        -> oneLineCommentFound = true
-            symbolType == "MULTI_LINE_COMMENT_OPEN" -> multiLineCommentActive = true
-            else                                    -> tokens.add(Token(symbolType, lexeme, null))
-        }
-    }
-
     fun findCommentTerminator(){
         while (index < content.length && multiLineCommentActive){
             if (content[index] == '*' && content.getOrNull(index + 1) == '/') {
@@ -172,6 +155,17 @@ class Line(val content: String, val lineNum: Int){
                 return
             }
             index++
+        }
+    }
+
+    fun identifySymbol(lexeme: String) {
+        val symbolType = KeySymbol.entries.find { it.symbol == lexeme }?.name
+
+        when {
+            symbolType == null                      -> displayErrorMsg("SYNTAX","SYMBOL",lexeme)
+            symbolType == "ONE_LINE_COMMENT"        -> oneLineCommentFound = true
+            symbolType == "MULTI_LINE_COMMENT_OPEN" -> multiLineCommentActive = true
+            else                                    -> tokens.add(Token(symbolType, lexeme, null))
         }
     }
 
