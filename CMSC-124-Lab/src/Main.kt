@@ -105,26 +105,26 @@ class Line(val content: String, val lineNum: Int){
     fun formNumber() {
         val start = index
         var type = "INT_NUMBER"
+        var seenDot = false
 
-        while (index < content.length){
-            if (!(content[index].isLetter() || content[index].isDigit() || content[index] == '.')){
-                index--
-                tokenize(content.slice(start..index), type)
-                return
+        while (index < content.length) {
+            val char = content[index]
+
+            when {
+                char.isDigit() -> {}    // skip
+                char == '.' -> {
+                    if (seenDot) displayErrorMsg("SYNTAX", type, null)
+                    seenDot = true
+                    type = "FLOAT_NUMBER"
+                }
+                char.isLetter() -> displayErrorMsg("SYNTAX", type, null)
+                else -> break           // stops when meeting a symbol or whitespace
             }
-
-            if (content[index] == '.' && type == "INT_NUMBER"){
-                type = "FLOAT_NUMBER"
-            } else if (content[index] == '.') {
-                displayErrorMsg("SYNTAX", type,null)
-            }
-
-            if (content[index].isLetter()) displayErrorMsg("SYNTAX", type, null)
             index++
         }
-        index--
-        tokenize(content.slice(start..index), type)
-        return
+
+        val number = content.substring(start, index)
+        tokenize(number, type)
     }
 
     fun formSymbol() {
