@@ -93,7 +93,6 @@ class Line(val content: String, val lineNum: Int){
     fun constructTokens(){
         while (index < content.length){
             val char = content[index]
-            val nextChar: Char? = content.getOrNull(index + 1)
 
             when {
                 oneLineCommentFound     -> break
