@@ -85,7 +85,7 @@ class Line(val content: String, val lineNum: Int){
                 }
                 char.isLetter() -> formWord()
                 char.isDigit() -> formNumber()
-                char.isWhitespace() -> Unit
+                char.isWhitespace() -> {}               // skip
                 else -> formSymbol()
             }
             index++
@@ -95,19 +95,11 @@ class Line(val content: String, val lineNum: Int){
 
     fun formWord() {
         val start = index
-        while (index < content.length){
-            if (content[index].isWhitespace() || content[index].toString() in operators + delimiters){
-                index--
-                tokenize(content.slice(start..index))
-                return
-            }
-
-            if (!(content[index].isLetter() || content[index].isDigit())) displayErrorMsg("SYNTAX", "DATA_TYPE", null)
+        while (index < content.length && content[index].isLetterOrDigit()) {
             index++
         }
-        index--
-        tokenize(content.slice(start..index))
-        return
+        val word = content.substring(start, index)
+        tokenize(word)
     }
 
     fun formNumber() {
