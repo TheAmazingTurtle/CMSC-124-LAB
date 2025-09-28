@@ -129,21 +129,19 @@ class Line(val content: String, val lineNum: Int){
 
     fun formSymbol() {
         val type = "SYMBOL"
-        var symbol = StringBuilder()
-        while (index < content.length && symbol.length < 2) {
-            if ((content[index].isWhitespace() || content[index].isLetter() || content[index].isDigit())) {
-                index--
-                break
-            }
-            symbol.append(content[index])
+        val start = index
+
+        val nextChar = content.getOrNull(index + 1)
+        if (nextChar != null && !nextChar.isWhitespace() && !nextChar.isLetterOrDigit()){
             index++
         }
 
-        val stringedSymbol = symbol.toString()
-        if (identifySymbol(stringedSymbol) != null){
+        val stringedSymbol = content.substring(start, index)
+
+        if (identifySymbol(stringedSymbol) != null) {
             tokenize(stringedSymbol, type)
-            return
-        } else {
+        }
+        else {
             displayErrorMsg("SYNTAX", type, stringedSymbol)
         }
     }
