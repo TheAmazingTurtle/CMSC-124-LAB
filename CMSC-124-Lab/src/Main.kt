@@ -76,9 +76,9 @@ class Line(val content: String, val lineNum: Int){
             val nextChar: Char? = content.getOrNull(index + 1)
 
             when {
-                char == '/' -> {
+                char == '/' -> {                        // comment check
                     when (nextChar) {
-                        '/' -> index = content.length
+                        '/' -> break
                         '*' -> checkBlockComment()
                         else -> formSymbol()
                     }
@@ -86,8 +86,6 @@ class Line(val content: String, val lineNum: Int){
                 char.isLetter() -> formWord()
                 char.isDigit() -> formNumber()
                 char.isWhitespace() -> Unit
-                    //print("$char is whitespace\n")
-
                 else -> formSymbol()
             }
             index++
