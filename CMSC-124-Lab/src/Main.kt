@@ -54,6 +54,9 @@ enum class Keyword(val word: String)  {
     DOUBLE_DATA_TYPE("double"),
     STRING_DATA_TYPE("String"),
     BOOLEAN_DATA_TYPE("boolean")
+
+    // method
+
 }
 
 val keySymbolMap = KeySymbol.entries.associateBy { it.symbol }
@@ -74,8 +77,6 @@ class CodeFile(){
 class Line(val content: String, val lineNum: Int){
     val tokens = mutableListOf<Token>()
     var index = 0
-    var oneLineCommentFound = false
-    var multiLineCommentActive = false
 
     init {
         constructTokens()
@@ -85,20 +86,40 @@ class Line(val content: String, val lineNum: Int){
     fun constructTokens(){
         while (index < content.length){
             val char = content[index]
+            val nextChar = content.getOrNull(index+1)
 
             when {
-                oneLineCommentFound     -> break
-                multiLineCommentActive  -> findCommentTerminator()
-                char.isLetter()         -> formWord()
-                char.isDigit()          -> formNumber()
-                char.isWhitespace()     -> index++                              // skip
-                else                    -> formSymbol()
+                char == '/' && nextChar == '/'  -> break
+                char == '/' && nextChar == '*'  -> findCommentTerminator()
+                char == '"'                     -> formString()
+                char.isLetter()                 -> formWord()
+                char.isDigit()                  -> formNumber()
+                char.isWhitespace()             -> index++                              // skip
+                else                            -> formSymbol()
             }
         }
         tokens.add(Token("EOF", "", null))
     }
 
-    fun formWord() {
+    fun formString(){
+        index++
+        val formedString = StringBuilder()
+        while (index < content.length){
+            val char = content.getOrNull(index++)
+
+            if (char == '"'){
+                tokenize(formedString.toString(), "STRING")
+                return
+            } else {
+                formedString.append(char)
+            }
+        }
+
+        displayErrorMsg("SYNTAX", "STRING", null)
+
+    }
+
+    fun formWord(){
         val start = index
         while (index < content.length && content[index].isLetterOrDigit()) {
             index++
@@ -146,9 +167,9 @@ class Line(val content: String, val lineNum: Int){
     }
 
     fun findCommentTerminator(){
-        while (index < content.length && multiLineCommentActive){
+        index += 2
+        while (index < content.length){
             if (content[index] == '*' && content.getOrNull(index + 1) == '/') {
-                multiLineCommentActive = false
                 index += 2  // skip over */
                 return
             }
@@ -156,30 +177,37 @@ class Line(val content: String, val lineNum: Int){
         }
     }
 
-    fun identifySymbol(lexeme: String) {
+    fun identifySymbol(lexeme: String): String? {
         val symbolType = KeySymbol.entries.find { it.symbol == lexeme }?.name
 
-        when {
-            symbolType == null                      -> displayErrorMsg("SYNTAX","SYMBOL",lexeme)
-            symbolType == "ONE_LINE_COMMENT"        -> oneLineCommentFound = true
-            symbolType == "MULTI_LINE_COMMENT_OPEN" -> multiLineCommentActive = true
-            else                                    -> tokens.add(Token(symbolType, lexeme, null))
+        if (symbolType == null) {
+            displayErrorMsg("SYNTAX","SYMBOL",lexeme)
         }
+
+        return symbolType
     }
 
-    fun identifyKeyword(lexeme: String){
+    fun identifyKeyword(lexeme: String): String? {
         val wordType = Keyword.entries.find { it.word == lexeme }?.name
-        tokens.add(Token(wordType, lexeme, null))
+
+        return wordType
     }
 
     fun tokenize(lexeme: String, type: String? = null){
-        when{
-            type == "INT_NUMBER"    -> tokens.add(Token(type, lexeme, lexeme))
-            type == "FLOAT_NUMBER"  -> tokens.add(Token(type, lexeme, if (lexeme.last() == '.') "${lexeme}0" else lexeme))
-            isSymbol(lexeme)        -> identifySymbol(lexeme)
-            isKeyword(lexeme)       -> identifyKeyword(lexeme)
-            else -> tokens.add(Token("IDENTIFIER", lexeme, null))
-        }
+        tokens.add (
+            when{
+                type == "INT_NUMBER"    -> Token(type, lexeme, lexeme)
+                type == "FLOAT_NUMBER"  -> Token(type, lexeme, if (lexeme.last() == '.') "${lexeme}0" else lexeme)
+                type == "STRING"        -> Token(type, "\"${lexeme}\"", lexeme)
+                isSymbol(lexeme)        -> Token(identifySymbol(lexeme), lexeme, null)
+                isKeyword(lexeme)       -> Token(identifyKeyword(lexeme), lexeme, null)
+                else                    -> Token("IDENTIFIER", lexeme, null)
+            }
+        )
+    }
+
+    fun identifyTokenType(){
+
     }
 
     fun displayTokens(){
@@ -198,11 +226,12 @@ class Line(val content: String, val lineNum: Int){
 
     fun identifySyntaxErrorMsg(tokenType: String, errorSymbol: String?){
         val SyntaxErrorMsg: String = "SyntaxError:"
-        when{
-            tokenType == "INT_NUMBER" -> println("$SyntaxErrorMsg cannot start identifier with a number at line $lineNum")
-            tokenType == "FLOAT_NUMBER" -> println("$SyntaxErrorMsg improper number format at line $lineNum")
-            tokenType == "SYMBOL" -> println("$SyntaxErrorMsg unexpected symbol $errorSymbol at line $lineNum")
-            tokenType == "BLOCK_COMMENT" -> println("$SyntaxErrorMsg unterminated block comment")
+        when (tokenType){
+            "INT_NUMBER" -> println("$SyntaxErrorMsg cannot start identifier with a number at line $lineNum")
+            "FLOAT_NUMBER" -> println("$SyntaxErrorMsg improper number format at line $lineNum")
+            "SYMBOL" -> println("$SyntaxErrorMsg unexpected symbol $errorSymbol at line $lineNum")
+            "STRING" -> println("$SyntaxErrorMsg unterminated string at line $lineNum")
+            "BLOCK_COMMENT" -> println("$SyntaxErrorMsg unterminated block comment")
         }
     }
 }
