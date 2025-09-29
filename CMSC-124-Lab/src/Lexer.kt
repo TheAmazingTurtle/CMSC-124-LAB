@@ -12,6 +12,7 @@ class Lexer() {
 
         while (lineScanner.hasCharsLeft()){
             val curChar = lineScanner.curChar ?: ' '
+            val prevChar = lineScanner.prevChar ?: ' '
             val nextChar = lineScanner.nextChar
 
             if (curChar.isWhitespace()) {
@@ -32,7 +33,7 @@ class Lexer() {
                             curChar == '"'      -> formString()
                             curChar == '\''     -> formChar()
                             curChar.isLetter()  -> formWord()
-                            curChar.isDigit()   -> formNumber()
+                            curChar.isDigit() || curChar == '.' && !prevChar.isLetter() -> formNumber()
                             else                -> formSymbol()
                         }
 
@@ -43,7 +44,7 @@ class Lexer() {
         return Line(newlineString, lineNumber, tokenList)
     }
 
-    fun formString(): Token{
+    private fun formString(): Token{
         val lexemeBuilder = StringBuilder()
         lexemeBuilder.append(lineScanner.curChar)
         lineScanner.advance()
@@ -63,7 +64,7 @@ class Lexer() {
         return Token(null, "", null, lineNumber)
     }
 
-    fun formChar(): Token{
+    private fun formChar(): Token{
         lineScanner.advance()
         if (lineScanner.curChar == null || lineScanner.nextChar != '\''){
             displayErrorMsg("SYNTAX", "CHAR")
@@ -73,7 +74,7 @@ class Lexer() {
         return Token("CHAR", "\'${literal}\'", literal, lineNumber)
     }
 
-    fun formWord(): Token{
+    private fun formWord(): Token{
         lineScanner.markStart()
         while (lineScanner.hasCharsLeft() && lineScanner.curChar?.isLetterOrDigit() == true) {
             lineScanner.advance()
@@ -92,7 +93,7 @@ class Lexer() {
         return Token(identifyKeyword(lexeme), lexeme, null, lineNumber)
     }
 
-    fun formNumber(): Token {
+    private fun formNumber(): Token {
         lineScanner.markStart()
         var type = "INT_NUMBER"
         var seenDot = false
@@ -121,7 +122,7 @@ class Lexer() {
                 }
     }
 
-    fun formSymbol(): Token {
+    private fun formSymbol(): Token {
         lineScanner.markStart()
 
         val nextChar = lineScanner.nextChar
@@ -132,7 +133,7 @@ class Lexer() {
         return Token(identifySymbol(lexeme), lexeme, null, lineNumber)
     }
 
-    fun findCommentTerminator(){
+    private fun findCommentTerminator(){
         lineScanner.advance(2)
         while (lineScanner.hasCharsLeft()){
             if (lineScanner.curChar == '*' && lineScanner.nextChar == '/') {
@@ -143,7 +144,7 @@ class Lexer() {
         }
     }
 
-    fun identifySymbol(lexeme: String): String? {
+    private fun identifySymbol(lexeme: String): String? {
         val symbolType = KeySymbol.entries.find { it.symbol == lexeme }?.name
         if (symbolType == null) {
             displayErrorMsg("SYNTAX","SYMBOL",lexeme)
@@ -152,7 +153,7 @@ class Lexer() {
         return symbolType
     }
 
-    fun identifyKeyword(lexeme: String): String? {
+    private fun identifyKeyword(lexeme: String): String? {
         val wordType = Keyword.entries.find { it.word == lexeme }?.name
         if (wordType == null) {
             return "IDENTIFIER"
@@ -160,14 +161,14 @@ class Lexer() {
         return wordType
     }
 
-    fun displayErrorMsg(errorType: String, tokenType: String, errorSymbol: String? = null){
+    private fun displayErrorMsg(errorType: String, tokenType: String, errorSymbol: String? = null){
         when{
             errorType == "SYNTAX" ->  identifySyntaxErrorMsg(tokenType, errorSymbol)
         }
         exitProcess(1)
     }
 
-    fun identifySyntaxErrorMsg(tokenType: String, errorSymbol: String?){
+    private fun identifySyntaxErrorMsg(tokenType: String, errorSymbol: String?){
         val syntaxErrorMsg: String = "SyntaxError:"
 
         when (tokenType){
