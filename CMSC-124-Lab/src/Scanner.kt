@@ -3,6 +3,7 @@ class Scanner(private var lineString: String = "") {
     private var startIndex = 0
 
     val curChar: Char? get() = lineString.getOrNull(curIndex)
+    val prevChar: Char? get() = lineString.getOrNull(curIndex - 1)
     val nextChar: Char? get() = lineString.getOrNull(curIndex + 1)
 
     fun setLineString(newLineString: String) {
