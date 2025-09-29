@@ -58,10 +58,11 @@ enum class Keyword(val word: String)  {
     FLOAT_DATA_TYPE("float"),
     DOUBLE_DATA_TYPE("double"),
     STRING_DATA_TYPE("String"),
-    BOOLEAN_DATA_TYPE("boolean")
+    BOOLEAN_DATA_TYPE("boolean"),
 
     // METHOD
-
+    PRINT_METHOD("print"),
+    INPUT_METHOD("input")
 }
 
 class CodeFile(){
