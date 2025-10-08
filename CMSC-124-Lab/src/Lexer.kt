@@ -33,7 +33,7 @@ class Lexer() {
                             curChar == '"'      -> formString()
                             curChar == '\''     -> formChar()
                             curChar.isLetter()  -> formWord()
-                            curChar.isDigit() || curChar == '.' && !prevChar.isLetter() -> formNumber()
+                            curChar.isDigit() || curChar == '.' && !prevChar.isLetterOrDigit() -> formNumber()
                             else                -> formSymbol()
                         }
 
@@ -82,11 +82,11 @@ class Lexer() {
 
         val lexeme = lineScanner.getSubstring()
 
-        if (lexeme == "TRUE"){
+        if (lexeme == "true"){
             return Token("TRUE", "TRUE", 1, lineNumber)
         }
 
-        if (lexeme == "FALSE"){
+        if (lexeme == "false"){
             return Token("FALSE", "FALSE", 0, lineNumber)
         }
 
