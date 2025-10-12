@@ -1,6 +1,8 @@
+import jdk.dynalink.Operation
+
 class Parser() {
     var exprTree = Tree()
-    var curExpr: Expression? = null
+    var curNode: ExpressionNode? = null
 
     var index = 0
     var curLine: Line? = null
@@ -17,45 +19,64 @@ class Parser() {
         evaluateExpression()
     }
 
-    fun evaluateExpression(){
-        when {
-            logicExpression()       -> return
-            arithmeticExpression()  -> return
-        }
+    fun evaluateExpression(): ExpressionNode{
+        exprTree(when {
+            logicExpression()
+            arithmeticExpression()
+        })
 
         // parsing error
     }
 
-    fun logicExpression(): Boolean{
+    fun logicExpression(): ExpressionNode{
         orOperation()
     }
 
-    fun orOperation(){
+    fun orOperation(): ExpressionNode{
         andOperation()
     }
 
-    fun andOperation(){
+    fun andOperation(): ExpressionNode {
         equalityOperation()
     }
 
-    fun equalityOperation(){
+    fun equalityOperation(): ExpressionNode {
         relationalOperation()
     }
 
-    fun relationalOperation(){
-        notOperation()
-    }
+    fun relationalOperation(): ExpressionNode {
+        val leftNode = notOperation()
 
-    fun notOperation(){
-        term()
-    }
+        if (curToken?.type in setOf("LESSER", "GREATER", "LESSER_EQUAL", "GREATER_EQUAL")){
+            val operator = curToken?.lexeme
+            lex()
 
-    fun term(){
-        when (curToken?.type){
-            "TRUE"      -> return
-            "FALSE"     -> return
-            "L_PAREN"   -> evaluateExpression()
+            return BinaryNode(curNode, operator?:"", leftNode, notOperation())
         }
+
+        return leftNode
+    }
+
+    fun notOperation(): ExpressionNode {
+        if (curToken?.type == "NOT"){
+            lex()
+            return UnaryNode(curNode, "!", notOperation())
+        }
+        else {
+            return term()
+        }
+
+    }
+
+    fun term(): ExpressionNode {
+        val node = when (curToken?.type){
+                        "TRUE"      -> LiteralNode(curNode, true)
+                        "FALSE"     -> LiteralNode(curNode, false)
+                        "L_PAREN"   -> GroupNode(curNode, evaluateExpression())
+                        else        -> LiteralNode(curNode, "ERROR") // error
+                    }
+        lex()
+        return node
     }
 
     fun arithmeticExpression() : Boolean{

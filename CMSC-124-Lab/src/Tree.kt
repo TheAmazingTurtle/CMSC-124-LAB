@@ -1,5 +1,3 @@
 class Tree {
-    val root: Node? = null
-
-
+    val rootNode: ExpressionNode? = null
 }
