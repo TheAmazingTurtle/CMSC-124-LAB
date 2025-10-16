@@ -44,6 +44,8 @@ class Lexer() {
         return Line(newlineString, lineNumber, tokenList)
     }
 
+
+
     private fun formString(): Token{
         val lexemeBuilder = StringBuilder()
         lexemeBuilder.append(lineScanner.curChar)
@@ -60,14 +62,13 @@ class Lexer() {
 
             lineScanner.advance()
         }
-        displayErrorMsg("SYNTAX", "STRING")
-        return Token(null, "", null, lineNumber)
+        return Token("ERROR", identifySyntaxError("STRING"), null, lineNumber)
     }
 
     private fun formChar(): Token{
         lineScanner.advance()
         if (lineScanner.curChar == null || lineScanner.nextChar != '\''){
-            displayErrorMsg("SYNTAX", "CHAR")
+            return Token ("ERROR", identifySyntaxError("CHAR"), null, lineNumber)
         }
         val literal = lineScanner.curChar ?: ' '
         lineScanner.advance(2)
@@ -104,11 +105,15 @@ class Lexer() {
             when {
                 char.isDigit()  -> {}    // skip
                 char == '.'     ->  {
-                                        if (seenDot) displayErrorMsg("SYNTAX", type)
+                                        if (seenDot) {
+                                            return Token ("ERROR", identifySyntaxError( type), null, lineNumber)
+                                        }
                                         seenDot = true
                                         type = "FLOAT_NUMBER"
                                     }
-                char.isLetter() -> displayErrorMsg("SYNTAX", type)
+                char.isLetter() -> {
+                    return Token ("ERROR", identifySyntaxError( type), null, lineNumber)
+                }
                 else            -> break           // stops when meeting a symbol or whitespace
             }
             lineScanner.advance()
@@ -130,7 +135,7 @@ class Lexer() {
         lineScanner.advance(step)
 
         val lexeme = lineScanner.getSubstring()
-        return Token(identifySymbol(lexeme), lexeme, null, lineNumber)
+        return identifySymbolToken(lexeme)
     }
 
     private fun findCommentTerminator(){
@@ -144,40 +149,35 @@ class Lexer() {
         }
     }
 
-    private fun identifySymbol(lexeme: String): String? {
-        val symbolType = KeySymbol.entries.find { it.symbol == lexeme }?.name
-        if (symbolType == null) {
-            displayErrorMsg("SYNTAX","SYMBOL",lexeme)
+    private fun identifySymbolToken(lexeme: String): Token {
+        val symbolType = KeySymbol.entries.find { it.symbol == lexeme }?.name?:"ERROR"
+        if (symbolType == "ERROR") {
+            Token("ERROR", identifySyntaxError("SYMBOL",lexeme), null, lineNumber)
         }
 
-        return symbolType
+        return Token(symbolType, lexeme, null, lineNumber)
     }
 
-    private fun identifyKeyword(lexeme: String): String? {
-        val wordType = Keyword.entries.find { it.word == lexeme }?.name
-        if (wordType == null) {
+    private fun identifyKeyword(lexeme: String): String {
+        val wordType = Keyword.entries.find { it.word == lexeme }?.name ?: "ERROR"
+        if (wordType == "ERROR") {
             return "IDENTIFIER"
         }
         return wordType
     }
 
-    private fun displayErrorMsg(errorType: String, tokenType: String, errorSymbol: String? = null){
-        when{
-            errorType == "SYNTAX" ->  identifySyntaxErrorMsg(tokenType, errorSymbol)
-        }
-        exitProcess(1)
-    }
-
-    private fun identifySyntaxErrorMsg(tokenType: String, errorSymbol: String?){
+    private fun identifySyntaxError(tokenType: String, errorSymbol: String? = null): String{
         val syntaxErrorMsg: String = "SyntaxError:"
 
-        when (tokenType){
-            "INT_NUMBER" -> println("$syntaxErrorMsg cannot start identifier with a number at line $lineNumber")
-            "FLOAT_NUMBER" -> println("$syntaxErrorMsg improper number format at line $lineNumber")
-            "SYMBOL" -> println("$syntaxErrorMsg unexpected symbol $errorSymbol at line $lineNumber")
-            "STRING" -> println("$syntaxErrorMsg unterminated string at line $lineNumber")
-            "CHAR" -> println("$syntaxErrorMsg improper char format at line $lineNumber")
-        }
+        val errorMsg = when (tokenType){
+                            "INT_NUMBER" -> "$syntaxErrorMsg cannot start identifier with a number at line $lineNumber"
+                            "FLOAT_NUMBER" -> "$syntaxErrorMsg improper number format at line $lineNumber"
+                            "SYMBOL" -> "$syntaxErrorMsg unexpected symbol $errorSymbol at line $lineNumber"
+                            "STRING" -> "$syntaxErrorMsg unterminated string at line $lineNumber"
+                            "CHAR" -> "$syntaxErrorMsg improper char format at line $lineNumber"
+                            else -> "UNIDENTIFIED ERROR"
+                        }
+        return errorMsg
     }
 }
 

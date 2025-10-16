@@ -1,29 +1,21 @@
 class CodeFile(){
     private val fileLexer = Lexer()
     private val fileParser = Parser()
-    private val lineList = mutableListOf<Line>()
 
-    fun addLine(content: String){
-        val newLine = fileLexer.getNewLine(content)
-        lineList.add(newLine)
-        fileParser.parseLine(newLine)
+
+    fun getLine(content: String): Line{
+        return fileLexer.getNewLine(content)
     }
 
-    fun getCurLine(): Line{
-        return lineList[lineList.size-1]
-    }
+    fun getParseTree(content: String): ParseTree {
+        val newLine = getLine(content)
 
-    fun displayTokens(lineNumber: Int ){
-        for (token in lineList[lineNumber-1].tokenList){
-            println("Token(type=${token.type}, lexeme=${token.lexeme}, literal=${token.literal}, line=${token.lineNumber})")
-        }
-    }
-
-    fun displayAllTokens(){
-        for (line in lineList){
-            for (token in line.tokenList){
-                println("Token(type=${token.type}, lexeme=${token.lexeme}, literal=${token.literal}, line=${token.lineNumber})")
+        for (token in newLine.tokenList){
+            if (token.type == "ERROR"){
+                
             }
         }
+
+        return fileParser.parseLine(newLine.tokenList)
     }
 }

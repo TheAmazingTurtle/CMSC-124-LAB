@@ -5,6 +5,7 @@ enum class KeySymbol(val symbol: String, ) {
     LESSER_EQUAL("<="),
     GREATER_EQUAL(">="),
     EQUAL("=="),
+    NOT_EQUAL("!="),
     NOT("!"),
     AND("&&"),
     OR("||"),
