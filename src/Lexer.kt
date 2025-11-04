@@ -1,5 +1,3 @@
-import javax.xml.transform.Source
-
 class Lexer {
     private var sourceLine = ""
     private var index = 0
@@ -156,7 +154,6 @@ class Lexer {
         index = 0
     }
 
-    private fun getPrevChar(): Char = sourceLine.getOrNull(index + 1) ?: ' '
     private fun getCurChar(): Char = sourceLine[index]
     private fun getNextChar(): Char = sourceLine.getOrNull(index + 1) ?: ' '
     private fun peek(index: Int): Char? = sourceLine.getOrNull(index)
