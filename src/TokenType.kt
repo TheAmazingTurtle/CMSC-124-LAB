@@ -1,0 +1,15 @@
+enum class TokenType {
+    IDENTIFIER, STRING, NUMBER, TRUE, FALSE,
+
+    ADDED, SUBTRACTED, MULTIPLIED, DIVIDED, BY,
+
+    AND, OR, NOT, IS, EQUAL, GREATER, LESS, THAN,
+
+    SET, TO, AS,
+
+    COMMA,
+
+    EOL, EOF,
+
+    INVALID
+}

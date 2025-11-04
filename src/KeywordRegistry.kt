@@ -1,35 +1,35 @@
 object KeywordRegistry {
     private val arithmeticKeywords = mapOf(
-        "added" to "ADDED",
-        "subtracted" to "SUBTRACTED",
-        "multiplied" to "MULTIPLIED",
-        "divided" to "DIVIDED",
-        "by" to "BY"
+        "added" to TokenType.ADDED,
+        "subtracted" to TokenType.SUBTRACTED,
+        "multiplied" to TokenType.MULTIPLIED,
+        "divided" to TokenType.DIVIDED,
+        "by" to TokenType.BY
     )
 
     private val logicKeywords = mapOf(
-        "add" to "ADD",
-        "or" to "OR",
-        "not" to "NOT",
-        "is" to "IS",
-        "equal" to "EQUAL",
-        "greater" to "GREATER",
-        "less" to "LESS",
-        "than" to "THAN",
-        "true" to "TRUE",
-        "false" to "FALSE"
+        "and" to TokenType.AND,
+        "or" to TokenType.OR,
+        "not" to TokenType.NOT,
+        "is" to TokenType.IS,
+        "equal" to TokenType.EQUAL,
+        "greater" to TokenType.GREATER,
+        "less" to TokenType.LESS,
+        "than" to TokenType.THAN,
+        "true" to TokenType.TRUE,
+        "false" to TokenType.FALSE
     )
 
     private val assignKeywords = mapOf(
-        "set" to "SET",
-        "to" to "TO",
-        "as" to "AS"
+        "set" to TokenType.SET,
+        "to" to TokenType.TO,
+        "as" to TokenType.AS
     )
 
     private val allKeywords = arithmeticKeywords + logicKeywords + assignKeywords
 
 
-    fun getWordType(word: String): String? {
+    fun getWordType(word: String): TokenType? {
         return allKeywords[word]
     }
 }

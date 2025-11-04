@@ -41,11 +41,14 @@ class Lexer {
             tokenList.add(token)
         }
 
-        val endOfLineToken = Token("EOL", "", null, lineNumber)
+        val endOfLineToken = Token(TokenType.EOL, "", null, lineNumber)
         tokenList.add(endOfLineToken)
 
         return tokenList.toList()
     }
+
+    fun isErrorFound(): Boolean = errorMsg != null
+    fun getErrorMsg(): String? = errorMsg
 
     private fun formStringToken(): Token? {
         val terminator = getCurChar()
@@ -63,7 +66,7 @@ class Lexer {
         }
 
         val literal = sourceLine.substring(literalStartingIndex, index)
-        val stringToken = Token("STRING", "$terminator$literal$terminator", literal, lineNumber)
+        val stringToken = Token(TokenType.STRING, "$terminator$literal$terminator", literal, lineNumber)
         consumeChar()
 
         return stringToken
@@ -77,8 +80,9 @@ class Lexer {
         }
 
         val lexeme = sourceLine.substring(lexemeStartingIndex, index)
-        val wordType = KeywordRegistry.getWordType(lexeme) ?: "IDENTIFIER"
-        val wordToken = Token(wordType, lexeme, null, lineNumber)
+        val wordType = KeywordRegistry.getWordType(lexeme) ?: TokenType.IDENTIFIER
+        val literal = if (wordType == TokenType.TRUE || wordType == TokenType.FALSE) lexeme.toBoolean() else null
+        val wordToken = Token(wordType, lexeme, literal, lineNumber)
 
         return wordToken
     }
@@ -108,7 +112,7 @@ class Lexer {
 
         val lexeme = sourceLine.substring(lexemeStartingIndex, index)
         val literal = if (seenDot) lexeme.toFloat() else lexeme.toInt()
-        val numberToken = Token("NUMBER", lexeme, literal, lineNumber)
+        val numberToken = Token(TokenType.NUMBER, lexeme, literal, lineNumber)
 
         return numberToken
     }
@@ -172,9 +176,6 @@ class Lexer {
             else                    -> true
         }
     }
-
-    fun isErrorFound(): Boolean = errorMsg != null
-    fun getErrorMsg(): String? = errorMsg
 
     private fun raiseLexError(errorMsg: String) {
         this.index = sourceLine.length

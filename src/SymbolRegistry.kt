@@ -1,9 +1,9 @@
 object SymbolRegistry {
     private val allSymbols = mapOf(
-        "," to "COMMA"
+        "," to TokenType.COMMA
     )
 
-    fun getSymbolType(symbol: String): String? {
+    fun getSymbolType(symbol: String): TokenType? {
         return allSymbols[symbol]
     }
 }
