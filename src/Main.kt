@@ -2,14 +2,11 @@ fun main(){
     val lexer = Lexer()
     val parser = Parser()
 
-    var lineNumber = 0
     while (true) {
-        lineNumber++
-
         print("> ")
         val userInput = readln()
 
-        val tokens = lexer.getTokensFromLine(userInput, lineNumber)
+        val tokens = lexer.getTokensFromLine(userInput)
         if (lexer.isErrorFound()){
             println(lexer.getErrorMsg())
             continue
@@ -28,6 +25,9 @@ fun main(){
         }
 
         println(parseTree)
+
+        val result = Evaluator().getValueOfParseTree(parseTree)
+        println(result)
 
     }
 }

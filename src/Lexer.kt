@@ -1,13 +1,13 @@
 class Lexer {
     private var sourceLine = ""
     private var index = 0
-    private var lineNumber = 0
+    private var lineNumber = 1
     private var errorMsg: String? = null
     private var isMultilineCommentActive = false
 
-    fun getTokensFromLine (userInput: String, lineNumber: Int): List<Token?> {
-        setupLexer(userInput, lineNumber)
-        val tokenList = mutableListOf<Token?>()
+    fun getTokensFromLine (userInput: String): List<Token> {
+        setupLexer(userInput)
+        val tokenList = mutableListOf<Token>()
 
         if (isMultilineCommentActive){
             enforceMultilineComment()
@@ -36,12 +36,12 @@ class Lexer {
                 getCurChar() == '\"' || getCurChar() == '\''            -> formStringToken()
                 getCurChar() == '.' && getNextChar().isDigit()          -> formNumberToken()
                 else                                                    -> formSymbolToken()
-            }
+            } ?: break
 
             tokenList.add(token)
         }
 
-        val endOfLineToken = Token(TokenType.EOL, "", null, lineNumber)
+        val endOfLineToken = Token(TokenType.EOL, "", "null", lineNumber)
         tokenList.add(endOfLineToken)
 
         return tokenList.toList()
@@ -81,7 +81,7 @@ class Lexer {
 
         val lexeme = sourceLine.substring(lexemeStartingIndex, index)
         val wordType = KeywordRegistry.getWordType(lexeme) ?: TokenType.IDENTIFIER
-        val literal = if (wordType == TokenType.TRUE || wordType == TokenType.FALSE) lexeme.toBoolean() else null
+        val literal = if (wordType == TokenType.BOOLEAN) lexeme.toBoolean() else "null"
         val wordToken = Token(wordType, lexeme, literal, lineNumber)
 
         return wordToken
@@ -111,7 +111,7 @@ class Lexer {
         }
 
         val lexeme = sourceLine.substring(lexemeStartingIndex, index)
-        val literal = if (seenDot) lexeme.toFloat() else lexeme.toInt()
+        val literal = if (seenDot) lexeme.toDouble() as Number else lexeme.toInt() as Number
         val numberToken = Token(TokenType.NUMBER, lexeme, literal, lineNumber)
 
         return numberToken
@@ -132,7 +132,7 @@ class Lexer {
             return null
         }
 
-        val symbolToken = Token(symbolType, lexeme, null, lineNumber)
+        val symbolToken = Token(symbolType, lexeme, "null", lineNumber)
         return symbolToken
     }
 
@@ -151,9 +151,8 @@ class Lexer {
 
     }
 
-    private fun setupLexer(sourceLine: String, lineNumber: Int) {
+    private fun setupLexer(sourceLine: String) {
         this.sourceLine = sourceLine
-        this.lineNumber = lineNumber
         this.errorMsg = null
         index = 0
     }
@@ -179,6 +178,6 @@ class Lexer {
 
     private fun raiseLexError(errorMsg: String) {
         this.index = sourceLine.length
-        this.errorMsg = "Error: $errorMsg at line $lineNumber"
+        this.errorMsg = "Scanning Error: $errorMsg at line $lineNumber"
     }
 }

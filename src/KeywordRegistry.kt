@@ -16,8 +16,8 @@ object KeywordRegistry {
         "greater" to TokenType.GREATER,
         "less" to TokenType.LESS,
         "than" to TokenType.THAN,
-        "true" to TokenType.TRUE,
-        "false" to TokenType.FALSE
+        "true" to TokenType.BOOLEAN,
+        "false" to TokenType.BOOLEAN
     )
 
     private val assignKeywords = mapOf(
