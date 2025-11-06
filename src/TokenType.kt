@@ -11,5 +11,7 @@ enum class TokenType {
 
     EOL, EOF,
 
-    INVALID
+    INVALID,
+
+    OPEN_PARENTHESIS, CLOSE_PARENTHESIS
 }

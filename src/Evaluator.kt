@@ -1,8 +1,9 @@
 class Evaluator {
     private var activeLineNumber = -1
-    private val errorMsg get() = mutableListOf<String>()
+    private val errorMsg = mutableListOf<String>()
 
     fun getValueOfParseTree(parseTree: ParseTree): Any? {
+        errorMsg.clear()
         val rootNode = parseTree.rootNode ?: return null
 
         return getValueOfNode(rootNode)
@@ -91,7 +92,9 @@ class Evaluator {
     }
 
     private fun raiseRuntimeError(errorMsg: String){
-        this.errorMsg.add("Runtime Error: $errorMsg at line $activeLineNumber")
+        val completeErrorMsg = "Runtime Error: $errorMsg at line $activeLineNumber"
+        this.errorMsg.add(completeErrorMsg)
+        println(completeErrorMsg)
     }
 
     private fun failEvaluator(errorMsg: String): Nothing? {

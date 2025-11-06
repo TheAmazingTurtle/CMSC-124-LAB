@@ -5,7 +5,7 @@ class Lexer {
     private var errorMsg: String? = null
     private var isMultilineCommentActive = false
 
-    fun getTokensFromLine (userInput: String): List<Token> {
+    fun getTokensFromLine (userInput: String): List<Token>? {
         setupLexer(userInput)
         val tokenList = mutableListOf<Token>()
 
@@ -31,12 +31,12 @@ class Lexer {
             }
 
             val token = when {
-                getCurChar().isLetter()                                 -> formWordToken()
+                getCurChar().isLetter() || getCurChar() == '_'          -> formWordToken()
                 getCurChar().isDigit()                                  -> formNumberToken()
                 getCurChar() == '\"' || getCurChar() == '\''            -> formStringToken()
                 getCurChar() == '.' && getNextChar().isDigit()          -> formNumberToken()
                 else                                                    -> formSymbolToken()
-            } ?: break
+            } ?: return null
 
             tokenList.add(token)
         }
@@ -75,7 +75,7 @@ class Lexer {
     private fun formWordToken(): Token {
         val lexemeStartingIndex = index
 
-        while (hasMoreChars() && getCurChar().isLetterOrDigit()){
+        while (hasMoreChars() && (getCurChar().isLetterOrDigit() || getCurChar() == '_')){
             consumeChar()
         }
 
@@ -154,6 +154,7 @@ class Lexer {
     private fun setupLexer(sourceLine: String) {
         this.sourceLine = sourceLine
         this.errorMsg = null
+        this.isMultilineCommentActive = false
         index = 0
     }
 
@@ -177,7 +178,8 @@ class Lexer {
     }
 
     private fun raiseLexError(errorMsg: String) {
-        this.index = sourceLine.length
         this.errorMsg = "Scanning Error: $errorMsg at line $lineNumber"
+
+        println("Scanning Error: $errorMsg at line $lineNumber")
     }
 }
