@@ -5,54 +5,54 @@ class Parser {
     private var index = 0
     private val errorMsg = mutableListOf<String>()
 
-    fun getParseTree(tokenList: List<Token>): ParseTree? {
+    fun getParseTree(tokenList: List<Token>): ParseTree {
         setupParser(tokenList)
 
-        if (tokenList.size <= 1) return failParser("Empty expression")
+        if (getCurToken().type == TokenType.EOL) throw Exception(createErrorMsg("Empty expression"))
 
-        val rootNode = parseExpression()  ?: return null
+        val rootNode = parseExpression()
         val parseTree = ParseTree(rootNode)
 
-        if (getCurToken().type != TokenType.EOL){
-            raiseParseError("Improper coding sequence")
-        }
+        if (getCurToken().type != TokenType.EOL) throw Exception(createErrorMsg("Improper code sequence"))
+
 
         return parseTree
     }
-    fun isErrorFound(): Boolean = errorMsg.isNotEmpty()
-    fun getErrorMsgList(): List<String> = errorMsg.toList()
 
-    private fun parseExpression(): Node? = orOperation()
-    private fun orOperation(): Node? {
-        var leftNode = andOperation() ?: return null
+//    fun isErrorFound(): Boolean = errorMsg.isNotEmpty()
+//    fun getErrorMsgList(): List<String> = errorMsg.toList()
+
+    private fun parseExpression(): Node = orOperation()
+    private fun orOperation(): Node {
+        var leftNode = andOperation()
 
         while (getCurToken().type == TokenType.OR){
             consumeToken()
-            if (!hasMoreTokens()) return failParser("Missing operand after ${TokenType.OR} operator")
+            if (!hasMoreTokens()) throw Exception(createErrorMsg("Missing operand after ${TokenType.OR} operator"))
 
-            val rightNode = andOperation() ?: return null
+            val rightNode = andOperation()
             leftNode = Node.Binary(Operator.OR, leftNode, rightNode)
         }
 
         return leftNode
     }
 
-    private fun andOperation(): Node? {
-        var leftNode = equalityOperation() ?: return null
+    private fun andOperation(): Node {
+        var leftNode = equalityOperation()
 
         while (getCurToken().type == TokenType.AND){
             consumeToken()
-            if (!hasMoreTokens()) return failParser("Missing operand after ${TokenType.AND} operator")
+            if (!hasMoreTokens()) throw Exception(createErrorMsg("Missing operand after ${TokenType.AND} operator"))
 
-            val rightNode = equalityOperation() ?: return null
+            val rightNode = equalityOperation()
             leftNode = Node.Binary(Operator.AND, leftNode, rightNode)
         }
 
         return leftNode
     }
 
-    private fun equalityOperation(): Node? {
-        var leftNode = relationalOperator() ?: return null
+    private fun equalityOperation(): Node {
+        var leftNode = relationalOperator()
 
         while (true){
             val operator = when {
@@ -62,8 +62,8 @@ class Parser {
                     Operator.NOT_EQUAL
                 else -> break
             }
-            if (!hasMoreTokens()) return failParser("Missing operand after $operator operator")
-            val rightNode = relationalOperator() ?: return null
+            if (!hasMoreTokens()) throw Exception(createErrorMsg("Missing operand after $operator operator"))
+            val rightNode = relationalOperator()
 
             leftNode = Node.Binary(operator, leftNode, rightNode)
         }
@@ -71,8 +71,8 @@ class Parser {
         return leftNode
     }
 
-    private fun relationalOperator(): Node? {
-        var leftNode = arithmeticOperation() ?: return null
+    private fun relationalOperator(): Node {
+        var leftNode = arithmeticOperation()
 
         while (true){
             val operator = when {
@@ -86,8 +86,8 @@ class Parser {
                     Operator.LESS
                 else -> break
             }
-            if (!hasMoreTokens()) return failParser("Missing operand after $operator operator")
-            val rightNode = arithmeticOperation() ?: return null
+            if (!hasMoreTokens()) throw Exception(createErrorMsg("Missing operand after $operator operator"))
+            val rightNode = arithmeticOperation()
 
             leftNode = Node.Binary(operator, leftNode, rightNode)
 
@@ -96,8 +96,8 @@ class Parser {
         return leftNode
     }
 
-    private fun arithmeticOperation(): Node? {
-        var leftNode = unaryOperation() ?: return null
+    private fun arithmeticOperation(): Node {
+        var leftNode = unaryOperation()
 
         while (true) {
             val operator = when {
@@ -107,8 +107,8 @@ class Parser {
                 checkTokenTypeSequence(TokenType.DIVIDED, TokenType.BY) -> Operator.DIVIDE
                 else -> break
             }
-            if (!hasMoreTokens()) return failParser("Missing operand after $operator operator")
-            val rightNode = unaryOperation() ?: return null
+            if (!hasMoreTokens()) throw Exception(createErrorMsg("Missing operand after $operator operator"))
+            val rightNode = unaryOperation()
 
             leftNode = Node.Binary(operator, leftNode, rightNode)
         }
@@ -116,19 +116,18 @@ class Parser {
         return leftNode
     }
 
-    private fun unaryOperation(): Node? {
+    private fun unaryOperation(): Node {
         return if (getCurToken().type == TokenType.NOT){
             consumeToken()
-            if (!hasMoreTokens()) return failParser("Missing operand after ${TokenType.NOT} operator")
-
-            val node = unaryOperation() ?: return null
+            if (!hasMoreTokens()) throw Exception(createErrorMsg("Missing operand after ${TokenType.NOT} operator"))
+            val node = unaryOperation()
             Node.Unary(Operator.NOT, node)
         } else {
             literalValue()
         }
     }
 
-    private fun literalValue(): Node? {
+    private fun literalValue(): Node {
         val node = when (getCurToken().type) {
             in setOf(TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN) -> {
                 val literal = getCurToken().literal
@@ -137,18 +136,14 @@ class Parser {
             TokenType.IDENTIFIER -> Node.Literal(getCurToken().lexeme, getCurToken().lineNumber)
             TokenType.OPEN_PARENTHESIS -> {
                 consumeToken()
-                if (!hasMoreTokens()) return failParser("Missing expression after ${TokenType.OPEN_PARENTHESIS} symbol")
-                val innerNode = parseExpression() ?: return null
+                if (!hasMoreTokens()) throw Exception(createErrorMsg("Missing expression after ${TokenType.OPEN_PARENTHESIS} symbol"))
+                val innerNode = parseExpression()
 
-                if (getCurToken().type != TokenType.CLOSE_PARENTHESIS) failParser("Expect ')' after expression")
+                if (getCurToken().type != TokenType.CLOSE_PARENTHESIS) throw Exception(createErrorMsg("Expect ')' after expression"))
                 else Node.Group(innerNode)
             }
-            TokenType.EOL -> {
-                return failParser("Improper code sequence")
-            }
-            else -> {
-                return failParser("Unexpected token")
-            }
+            TokenType.EOL -> throw Exception(createErrorMsg("Improper code sequence"))
+            else -> throw Exception(createErrorMsg("Unexpected token"))
         }
 
         consumeToken()
@@ -178,13 +173,15 @@ class Parser {
 
 
 
-    private fun raiseParseError(errorMsg: String) = {
-        val completeErrorMsg = "Parsing Error: $errorMsg at line ${getCurToken().lineNumber}"
-        this.errorMsg.add(completeErrorMsg)
-        println(completeErrorMsg)
-    }
-    private fun failParser(errorMsg: String): Nothing? = raiseParseError(errorMsg).let { null }
-    private fun hasMoreTokens(): Boolean = index < tokenList.size;
+//    private fun raiseParseError(errorMsg: String) = {
+//        val completeErrorMsg = "Parsing Error: $errorMsg at line ${getCurToken().lineNumber}"
+//        this.errorMsg.add(completeErrorMsg)
+//        println(completeErrorMsg)
+//    }
+//    private fun failParser(errorMsg: String): Nothing? = raiseParseError(errorMsg).let { null }
+
+    private fun createErrorMsg(errorContent: String): String = "Parsing Error: $errorContent at line ${getCurToken().lineNumber}"
+    private fun hasMoreTokens(): Boolean = index < tokenList.size
     private fun getCurToken(): Token = tokenList[index]
     private fun consumeToken(numOfTokensToConsume: Int = 1) {
         index += numOfTokensToConsume

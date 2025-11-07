@@ -2,14 +2,13 @@ class Evaluator {
     private var activeLineNumber = -1
     private val errorMsg = mutableListOf<String>()
 
-    fun getValueOfParseTree(parseTree: ParseTree): Any? {
+    fun getValueOfParseTree(parseTree: ParseTree): Any {
         errorMsg.clear()
-        val rootNode = parseTree.rootNode ?: return null
-
+        val rootNode = parseTree.rootNode
         return getValueOfNode(rootNode)
     }
 
-    private fun getValueOfNode(node: Node): Any?{
+    private fun getValueOfNode(node: Node): Any{
         return when (node) {
             is Node.Unary -> getValueOfUnaryNode(node)
             is Node.Binary -> getValueOfBinaryNode(node)
@@ -21,21 +20,21 @@ class Evaluator {
         }
     }
 
-    private fun getValueOfUnaryNode(unaryNode: Node.Unary) : Any? {
-        val nodeValue = getValueOfNode(unaryNode.childNode) ?: return null
+    private fun getValueOfUnaryNode(unaryNode: Node.Unary) : Any {
+        val nodeValue = getValueOfNode(unaryNode.childNode)
 
         when (unaryNode.operator){
             Operator.NOT -> {
-                val boolValue = nodeValue as? Boolean ?: return failEvaluator("Invalid value type, expecting boolean")
+                val boolValue = nodeValue as? Boolean ?: throw Exception(createErrorMsg("Invalid value type, expecting boolean"))
                 return !boolValue
             }
-            else -> return failEvaluator("Unrecognized unary operator")
+            else -> throw Exception(createErrorMsg("Unrecognized unary operator"))
         }
     }
 
-    private fun getValueOfBinaryNode(binaryNode: Node.Binary) : Any? {
-        val leftNodeValue = getValueOfNode(binaryNode.leftNode) ?: return null
-        val rightNodeValue = getValueOfNode(binaryNode.rightNode) ?: return null
+    private fun getValueOfBinaryNode(binaryNode: Node.Binary) : Any {
+        val leftNodeValue = getValueOfNode(binaryNode.leftNode)
+        val rightNodeValue = getValueOfNode(binaryNode.rightNode)
 
         return when (binaryNode.operator){
             in OperatorRegistry.logicalOperators -> executeLogicalOperator(binaryNode.operator, leftNodeValue, rightNodeValue)
@@ -45,63 +44,65 @@ class Evaluator {
             Operator.EQUAL -> leftNodeValue == rightNodeValue
             Operator.NOT_EQUAL -> leftNodeValue != rightNodeValue
 
-            else -> failEvaluator("Unrecognized binary operator")
+            else -> throw Exception(createErrorMsg("Unrecognized binary operator"))
         }
     }
 
-    private fun executeLogicalOperator(operator: Operator, leftNodeValue: Any, rightNodeValue: Any) : Boolean? {
-        val leftVal = leftNodeValue as? Boolean ?: return failEvaluator("Invalid value type, expecting boolean")
-        val rightVal = rightNodeValue as? Boolean ?: return failEvaluator("Invalid value type, expecting boolean")
+    private fun executeLogicalOperator(operator: Operator, leftNodeValue: Any, rightNodeValue: Any) : Boolean {
+        val leftVal = leftNodeValue as? Boolean ?: throw Exception(createErrorMsg("Invalid value type, expecting boolean"))
+        val rightVal = rightNodeValue as? Boolean ?: throw Exception(createErrorMsg("Invalid value type, expecting boolean"))
 
         return when (operator) {
             Operator.AND -> leftVal && rightVal
             Operator.OR -> leftVal || rightVal
-            else -> return failEvaluator("Unrecognized logical operator")
+            else -> throw Exception(createErrorMsg("Unrecognized logical operator"))
         }
     }
 
-    private fun executeRelationalOperator(operator: Operator, leftNodeValue: Any, rightNodeValue: Any) : Boolean? {
-        val leftVal = (leftNodeValue as? Number)?.toDouble() ?: return failEvaluator("Invalid value type, expecting number")
-        val rightVal = (rightNodeValue as? Number)?.toDouble() ?: return failEvaluator("Invalid value type, expecting number")
+    private fun executeRelationalOperator(operator: Operator, leftNodeValue: Any, rightNodeValue: Any) : Boolean {
+        val leftVal = (leftNodeValue as? Number)?.toDouble() ?: throw Exception(createErrorMsg("Invalid value type, expecting number"))
+        val rightVal = (rightNodeValue as? Number)?.toDouble() ?: throw Exception(createErrorMsg("Invalid value type, expecting number"))
 
         return when (operator) {
             Operator.GREATER_EQUAL -> leftVal >= rightVal
             Operator.LESS_EQUAL -> leftVal <= rightVal
             Operator.GREATER -> leftVal > rightVal
             Operator.LESS -> leftVal < rightVal
-            else -> return failEvaluator("Unrecognized relational operator")
+            else -> throw Exception(createErrorMsg("Unrecognized relational operator"))
         }
     }
 
-    private fun executeArithmeticOperator(operator: Operator, leftNodeValue: Any, rightNodeValue: Any) : Number? {
+    private fun executeArithmeticOperator(operator: Operator, leftNodeValue: Any, rightNodeValue: Any) : Number {
         val isBothValueInt = leftNodeValue is Int && rightNodeValue is Int
-        val leftVal = (leftNodeValue as? Number)?.toDouble() ?: return failEvaluator("Invalid value type, expecting number")
-        val rightVal = (rightNodeValue as? Number)?.toDouble() ?: return failEvaluator("Invalid value type, expecting number")
+        val leftVal = (leftNodeValue as? Number)?.toDouble() ?: throw Exception(createErrorMsg("Invalid value type, expecting number"))
+        val rightVal = (rightNodeValue as? Number)?.toDouble() ?: throw Exception(createErrorMsg("Invalid value type, expecting number"))
 
         val result = when (operator) {
             Operator.ADD -> leftVal + rightVal
             Operator.SUBTRACT -> leftVal - rightVal
             Operator.MULTIPLY -> leftVal * rightVal
             Operator.DIVIDE ->
-                if (rightVal == 0.0) return failEvaluator("Dividing by zero")
+                if (rightVal == 0.0) throw Exception(createErrorMsg("Dividing by zero"))
                 else leftVal / rightVal
-            else -> return failEvaluator("Unrecognized arithmetic operator")
+            else -> throw Exception(createErrorMsg("Unrecognized arithmetic operator"))
         }
 
         return if (isBothValueInt) result.toInt() else result
     }
 
-    private fun raiseRuntimeError(errorMsg: String){
-        val completeErrorMsg = "Runtime Error: $errorMsg at line $activeLineNumber"
-        this.errorMsg.add(completeErrorMsg)
-        println(completeErrorMsg)
-    }
-
-    private fun failEvaluator(errorMsg: String): Nothing? {
-        raiseRuntimeError(errorMsg)
-        return null
-    }
-
-    fun isErrorFound(): Boolean = errorMsg.isNotEmpty()
-    fun getErrorMsgList(): List<String> = errorMsg.toList()
+    private fun createErrorMsg(errorContent: String): String = "Runtime Error: $errorContent at line $activeLineNumber"
+//
+//    private fun raiseRuntimeError(errorMsg: String){
+//        val completeErrorMsg = "Runtime Error: $errorMsg at line $activeLineNumber"
+//        this.errorMsg.add(completeErrorMsg)
+//        println(completeErrorMsg)
+//    }
+//
+//    private fun failEvaluator(errorMsg: String): Nothing? {
+//        raiseRuntimeError(errorMsg)
+//        return null
+//    }
+//
+//    fun isErrorFound(): Boolean = errorMsg.isNotEmpty()
+//    fun getErrorMsgList(): List<String> = errorMsg.toList()
 }

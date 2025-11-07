@@ -5,7 +5,7 @@ class Lexer {
     private var errorMsg: String? = null
     private var isMultilineCommentActive = false
 
-    fun getTokensFromLine (userInput: String): List<Token>? {
+    fun getTokensFromLine (userInput: String): List<Token> {
         setupLexer(userInput)
         val tokenList = mutableListOf<Token>()
 
@@ -36,7 +36,7 @@ class Lexer {
                 getCurChar() == '\"' || getCurChar() == '\''            -> formStringToken()
                 getCurChar() == '.' && getNextChar().isDigit()          -> formNumberToken()
                 else                                                    -> formSymbolToken()
-            } ?: return null
+            }
 
             tokenList.add(token)
         }
@@ -47,10 +47,10 @@ class Lexer {
         return tokenList.toList()
     }
 
-    fun isErrorFound(): Boolean = errorMsg != null
-    fun getErrorMsg(): String? = errorMsg
+//    fun isErrorFound(): Boolean = errorMsg != null
+//    fun getErrorMsg(): String? = errorMsg
 
-    private fun formStringToken(): Token? {
+    private fun formStringToken(): Token {
         val terminator = getCurChar()
         consumeChar()
 
@@ -60,10 +60,7 @@ class Lexer {
             consumeChar()
         }
 
-        if (!hasMoreChars() || getCurChar() != terminator) {
-            raiseLexError("Unterminated string")
-            return null
-        }
+        if (!hasMoreChars() || getCurChar() != terminator) throw Exception(createErrorMsg("Unterminated string"))
 
         val literal = sourceLine.substring(literalStartingIndex, index)
         val stringToken = Token(TokenType.STRING, "$terminator$literal$terminator", literal, lineNumber)
@@ -87,22 +84,16 @@ class Lexer {
         return wordToken
     }
 
-    private fun formNumberToken(): Token? {
+    private fun formNumberToken(): Token {
         val lexemeStartingIndex = index
         var seenDot = false
 
         while (hasMoreChars()) {
             when {
-                getCurChar().isLetter() -> {
-                    raiseLexError("Identifier starts with a number")
-                    return null
-                }
+                getCurChar().isLetter() -> throw Exception(createErrorMsg("Improper number format"))
                 getCurChar().isDigit()  -> {}    // skip
-                getCurChar() == '.'     ->  {
-                    if (seenDot) {
-                        raiseLexError("Improper number format")
-                        return null
-                    }
+                getCurChar() == '.'     -> {
+                    if (seenDot) throw Exception(createErrorMsg("Improper number format"))
                     seenDot = true
                 }
                 else            -> break           // stops when meeting a symbol or whitespace
@@ -117,7 +108,7 @@ class Lexer {
         return numberToken
     }
 
-    private fun formSymbolToken(): Token? {
+    private fun formSymbolToken(): Token {
         val lexemeStartingIndex = index
 
         while (hasMoreChars() && isSymbol(getCurChar())){
@@ -126,11 +117,7 @@ class Lexer {
 
         val lexeme = sourceLine.substring(lexemeStartingIndex, index)
         val symbolType = SymbolRegistry.getSymbolType(lexeme)
-
-        if (symbolType == null){
-            raiseLexError("Unrecognized symbol")
-            return null
-        }
+            ?: throw Exception(createErrorMsg("Unrecognized symbol"))
 
         val symbolToken = Token(symbolType, lexeme, "null", lineNumber)
         return symbolToken
@@ -177,9 +164,12 @@ class Lexer {
         }
     }
 
-    private fun raiseLexError(errorMsg: String) {
-        this.errorMsg = "Scanning Error: $errorMsg at line $lineNumber"
+//    private fun raiseLexError(errorMsg: String) {
+//        this.errorMsg = "Scanning Error: $errorMsg at line $lineNumber"
+//
+//        println("Scanning Error: $errorMsg at line $lineNumber")
+//    }
 
-        println("Scanning Error: $errorMsg at line $lineNumber")
-    }
+    private fun createErrorMsg(errorContent: String): String = "Scanning Error: $errorContent at line $lineNumber"
+
 }

@@ -6,16 +6,20 @@ fun main(){
     while (true) {
         print("> ")
         val userInput = readln().trim()
+        if (userInput.isEmpty()) continue
 
+        try {
+            val tokens = lexer.getTokensFromLine(userInput)
+            tokens.forEach { println(it) }
 
-        val tokens = lexer.getTokensFromLine(userInput) ?: continue
-        tokens.forEach { println(it) }
+            val parseTree = parser.getParseTree(tokens)
+            println(parseTree)
 
-        val parseTree = parser.getParseTree(tokens) ?: continue
-        // println(parseTree)
-
-        val result = evaluator.getValueOfParseTree(parseTree) ?: continue
-        println(result)
+            val result = evaluator.getValueOfParseTree(parseTree)
+            println(result)
+        } catch (e: Exception) {
+            println(e.message)
+        }
 
     }
 }
