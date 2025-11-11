@@ -1,0 +1,13 @@
+enum class Operator {
+    AND, OR,
+
+    EQUAL, NOT_EQUAL,
+
+    GREATER_EQUAL, LESS_EQUAL, GREATER, LESS,
+
+    ADD, SUBTRACT, MULTIPLY, DIVIDE,
+
+    NOT
+
+
+}
