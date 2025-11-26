@@ -1,11 +1,17 @@
-class Evaluator {
+class Evaluator (private val environment: Environment){
     private var activeLineNumber = -1
     private val errorMsg = mutableListOf<String>()
 
     fun getValueOfParseTree(parseTree: ParseTree): Any {
         errorMsg.clear()
         val rootNode = parseTree.rootNode
-        return getValueOfNode(rootNode)
+        return when(rootNode){
+            is Node -> getValueOfNode((rootNode))
+            is Stmt -> {
+                executeStatement(rootNode)
+            }
+            else -> throw Exception(createErrorMsg("Unknown statement and expression type"))
+        }
     }
 
     private fun getValueOfNode(node: Node): Any{
@@ -15,7 +21,12 @@ class Evaluator {
             is Node.Group -> getValueOfNode(node.childNode)
             is Node.Literal -> {
                 activeLineNumber = node.lineNumber
-                node.value
+                val value = node.value
+                if (value is String && value.startsWith("$")){
+                    environment.getName(value) ?: throw Exception(createErrorMsg("Undefined variable $value"))
+                } else {
+                    value
+                }
             }
         }
     }
@@ -88,6 +99,22 @@ class Evaluator {
         }
 
         return if (isBothValueInt) result.toInt() else result
+    }
+
+    private fun executeStatement(stmt: Stmt): Any{
+        return when(stmt){
+            is Stmt.SetVarStmt -> {
+                val value = getValueOfNode(stmt.value)
+                environment.define(stmt.name, value)
+                value
+            }
+            is Stmt.ShowStmt -> {
+                val value = getValueOfNode(stmt.value)
+                println(value)
+                value
+            }
+
+        }
     }
 
     private fun createErrorMsg(errorContent: String): String = "Runtime Error: $errorContent at line $activeLineNumber"

@@ -10,7 +10,10 @@ class Parser {
 
         if (getCurToken().type == TokenType.EOL) throw Exception(createErrorMsg("Empty expression"))
 
-        val rootNode = parseExpression()
+        val rootNode = when (getCurToken().type){
+            TokenType.SET, TokenType.SHOW -> parseStatement()
+            else -> parseExpression()
+        }
         val parseTree = ParseTree(rootNode)
 
         if (getCurToken().type != TokenType.EOL) throw Exception(createErrorMsg("Improper code sequence"))
@@ -21,6 +24,31 @@ class Parser {
 
 //    fun isErrorFound(): Boolean = errorMsg.isNotEmpty()
 //    fun getErrorMsgList(): List<String> = errorMsg.toList()
+    private fun parseStatement(): Stmt {
+        return when (getCurToken().type){
+            TokenType.SET -> parseSetVarStmt()
+            TokenType.SHOW -> parseShowStmt()
+            else -> throw Exception(createErrorMsg("Expected statement"))
+         }
+    }
+
+    private fun parseSetVarStmt(): Stmt.SetVarStmt {
+        consumeToken()
+        val varName = getCurToken().lexeme
+        expectToken(TokenType.IDENTIFIER)
+        if (!varName.startsWith("$")){
+            throw Exception(createErrorMsg("Variable name must start with $"))
+        }
+        expectToken(TokenType.TO)
+        val valueNode = parseExpression()
+        return Stmt.SetVarStmt(varName, valueNode)
+    }
+
+    private fun parseShowStmt(): Stmt.ShowStmt {
+        consumeToken()
+        val valueNode = parseExpression()
+        return Stmt.ShowStmt(valueNode)
+    }
 
     private fun parseExpression(): Node = orOperation()
     private fun orOperation(): Node {
@@ -185,5 +213,11 @@ class Parser {
     private fun getCurToken(): Token = tokenList[index]
     private fun consumeToken(numOfTokensToConsume: Int = 1) {
         index += numOfTokensToConsume
+    }
+    private fun expectToken(type: TokenType){
+        if (getCurToken().type != type){
+            throw Exception(createErrorMsg("Expected $type"))
+        }
+        consumeToken()
     }
 }

@@ -1,7 +1,12 @@
+//if this says kotlin not configured again,
+// fix project sdk and module sdk
+// and set to 21 in project structure settings
+
 fun main(){
     val lexer = Lexer()
     val parser = Parser()
-    val evaluator = Evaluator()
+    val env = Environment()
+    val evaluator = Evaluator(env)
 
     while (true) {
         print("> ")

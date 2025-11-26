@@ -7,6 +7,7 @@ class Lexer {
 
     fun getTokensFromLine (userInput: String): List<Token> {
         setupLexer(userInput)
+
         val tokenList = mutableListOf<Token>()
 
         if (isMultilineCommentActive){
@@ -31,7 +32,7 @@ class Lexer {
             }
 
             val token = when {
-                getCurChar().isLetter() || getCurChar() == '_'          -> formWordToken()
+                getCurChar() == '$' || getCurChar().isLetter() || getCurChar() == '_' -> formWordToken()
                 getCurChar().isDigit()                                  -> formNumberToken()
                 getCurChar() == '\"' || getCurChar() == '\''            -> formStringToken()
                 getCurChar() == '.' && getNextChar().isDigit()          -> formNumberToken()
@@ -72,7 +73,7 @@ class Lexer {
     private fun formWordToken(): Token {
         val lexemeStartingIndex = index
 
-        while (hasMoreChars() && (getCurChar().isLetterOrDigit() || getCurChar() == '_')){
+        while (hasMoreChars() && (getCurChar().isLetterOrDigit() || getCurChar() == '_' || getCurChar() == '$')){
             consumeChar()
         }
 
@@ -160,6 +161,7 @@ class Lexer {
             char.isWhitespace()     -> false
             char == '\''            -> false
             char == '\"'            -> false
+            char == '$'             -> false
             else                    -> true
         }
     }

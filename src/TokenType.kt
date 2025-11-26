@@ -7,6 +7,14 @@ enum class TokenType {
 
     SET, TO, AS,
 
+    IF, THEN, OTHERWISE, END,
+
+    WHILE, DO, FOR,
+
+    BASED, WHEN, ESCAPE,
+
+    SHOW,
+
     COMMA,
 
     EOL, EOF,

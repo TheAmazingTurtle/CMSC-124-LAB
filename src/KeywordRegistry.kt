@@ -26,7 +26,31 @@ object KeywordRegistry {
         "as" to TokenType.AS
     )
 
-    private val allKeywords = arithmeticKeywords + logicKeywords + assignKeywords
+    private val printKeyword = mapOf(
+        "show" to TokenType.SHOW
+    )
+
+    private val conditionalKeywords = mapOf(
+        "if" to TokenType.IF,
+        "then" to TokenType.THEN,
+        "otherwise" to TokenType.OTHERWISE,
+        "end" to TokenType.END,
+    )
+
+    private val loopKeywords = mapOf(
+        "while" to TokenType.WHILE,
+        "do" to TokenType.DO,
+        "for" to TokenType.FOR,
+    )
+
+    private val switchKeywords = mapOf(
+        "based" to TokenType.BASED,
+        "when" to TokenType.WHEN,
+        "escape" to TokenType.ESCAPE
+    )
+
+
+    private val allKeywords = arithmeticKeywords + logicKeywords + assignKeywords + printKeyword + conditionalKeywords + loopKeywords + switchKeywords
 
 
     fun getWordType(word: String): TokenType? {
