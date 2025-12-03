@@ -3,9 +3,9 @@
 
 **CREATOR**
 
->Kent Francis E. Genilo
+>Kent Francis E. Genilo (TheAmazingTurtle)
 
->Jasmine G. Magadan
+>Jasmine G. Magadan (Jas-1005)
 
 **LANGUAGE OVERVIEW**
 
