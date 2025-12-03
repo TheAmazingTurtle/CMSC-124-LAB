@@ -10,44 +10,55 @@ class Parser {
 
         if (getCurToken().type == TokenType.EOL) throw Exception(createErrorMsg("Empty expression"))
 
-        val rootNode = when (getCurToken().type){
-            TokenType.SET, TokenType.SHOW -> parseStatement()
-            else -> parseExpression()
-        }
-        val parseTree = ParseTree(rootNode)
-
-        if (getCurToken().type != TokenType.EOL) throw Exception(createErrorMsg("Improper code sequence"))
-
-
-        return parseTree
+        val rootNode =
+            if (KeywordRegistry.isStatementKeyword(getCurToken().type))
+                parseStatement()
+            else
+                parseExpression()
+        return ParseTree(rootNode)
     }
 
 //    fun isErrorFound(): Boolean = errorMsg.isNotEmpty()
 //    fun getErrorMsgList(): List<String> = errorMsg.toList()
-    private fun parseStatement(): Stmt {
+    private fun parseStatement(): Statement {
         return when (getCurToken().type){
-            TokenType.SET -> parseSetVarStmt()
-            TokenType.SHOW -> parseShowStmt()
+            TokenType.SET -> parseSetVarStatement()
+            TokenType.SHOW -> parseShowStatement()
+            TokenType.BLOCK -> {
+                consumeToken()
+                expectToken(TokenType.EOL)
+                consumeToken()
+                Statement.Block()
+            }
+            TokenType.END_BLOCK -> {
+                consumeToken()
+                expectToken(TokenType.EOL)
+                consumeToken()
+                Statement.Block(enterBlock = false)
+            }
             else -> throw Exception(createErrorMsg("Expected statement"))
          }
     }
 
-    private fun parseSetVarStmt(): Stmt.SetVarStmt {
+    private fun parseSetVarStatement(): Statement {
         consumeToken()
-        val varName = getCurToken().lexeme
+
         expectToken(TokenType.IDENTIFIER)
-        if (!varName.startsWith("$")){
-            throw Exception(createErrorMsg("Variable name must start with $"))
-        }
+        if (!getCurToken().lexeme.startsWith('$')) throw Exception(createErrorMsg("Variable name must start with $"))
+        val identifierName = getCurToken().lexeme
+        consumeToken()
+
         expectToken(TokenType.TO)
+        consumeToken()
+
         val valueNode = parseExpression()
-        return Stmt.SetVarStmt(varName, valueNode)
+        return Statement.SetVariable(identifierName, valueNode)
     }
 
-    private fun parseShowStmt(): Stmt.ShowStmt {
+    private fun parseShowStatement(): Statement.Show {
         consumeToken()
         val valueNode = parseExpression()
-        return Stmt.ShowStmt(valueNode)
+        return Statement.Show(valueNode)
     }
 
     private fun parseExpression(): Node = orOperation()
@@ -161,7 +172,34 @@ class Parser {
                 val literal = getCurToken().literal
                 Node.Literal(literal, getCurToken().lineNumber)
             }
-            TokenType.IDENTIFIER -> Node.Literal(getCurToken().lexeme, getCurToken().lineNumber)
+            in KeywordRegistry.getFunctionKeyword() -> {
+                val functionName = getCurToken().type
+                consumeToken()
+                expectToken(TokenType.USING)
+                consumeToken()
+
+                val parameter = mutableListOf<Node>()
+                if (getCurToken().type == TokenType.ONLY){
+                    consumeToken()
+                    parameter.add(parseExpression())
+                } else {
+                    while(true) {
+                        if (getCurToken().type == TokenType.AND){
+                            consumeToken()
+                            parameter.add(parseExpression())
+                            break
+                        }
+                        parameter.add(parseExpression())
+                        expectToken(TokenType.COMMA)
+                        consumeToken()
+                    }
+                }
+
+                Node.Function(functionName, parameter, getCurToken().lineNumber)
+            }
+            TokenType.IDENTIFIER -> {
+                Node.Variable(getCurToken().lexeme, getCurToken().lineNumber)
+            }
             TokenType.OPEN_PARENTHESIS -> {
                 consumeToken()
                 if (!hasMoreTokens()) throw Exception(createErrorMsg("Missing expression after ${TokenType.OPEN_PARENTHESIS} symbol"))
@@ -218,6 +256,5 @@ class Parser {
         if (getCurToken().type != type){
             throw Exception(createErrorMsg("Expected $type"))
         }
-        consumeToken()
     }
 }

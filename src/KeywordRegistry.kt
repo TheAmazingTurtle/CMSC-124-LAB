@@ -23,37 +23,58 @@ object KeywordRegistry {
     private val assignKeywords = mapOf(
         "set" to TokenType.SET,
         "to" to TokenType.TO,
-        "as" to TokenType.AS
+        "as" to TokenType.AS,
+        "this" to TokenType.THIS
     )
 
     private val printKeyword = mapOf(
         "show" to TokenType.SHOW
     )
 
+    private val exitKeyword = mapOf(
+        "quit" to TokenType.QUIT
+    )
+
+    private val blockKeywords = mapOf(
+        "block" to TokenType.BLOCK,
+        "end_block" to TokenType.END_BLOCK
+    )
+
     private val conditionalKeywords = mapOf(
         "if" to TokenType.IF,
         "then" to TokenType.THEN,
         "otherwise" to TokenType.OTHERWISE,
-        "end" to TokenType.END,
+        "end_if" to TokenType.ENDIF,
     )
 
     private val loopKeywords = mapOf(
         "while" to TokenType.WHILE,
         "do" to TokenType.DO,
         "for" to TokenType.FOR,
+        "end_while" to TokenType.END_WHILE,
+        "end_for" to TokenType.END_FOR
     )
 
     private val switchKeywords = mapOf(
         "based" to TokenType.BASED,
         "when" to TokenType.WHEN,
-        "escape" to TokenType.ESCAPE
+        "escape" to TokenType.ESCAPE,
+        "end_based" to TokenType.END_BASED
     )
 
+    private val builtInFunctionNameKeywords = mapOf(
+        "concat_to_string" to TokenType.CONCAT
+    )
 
-    private val allKeywords = arithmeticKeywords + logicKeywords + assignKeywords + printKeyword + conditionalKeywords + loopKeywords + switchKeywords
+    private val functionKeywords = mapOf(
+        "using" to TokenType.USING,
+        "only" to TokenType.ONLY
+    )
 
+    private val allKeywords = arithmeticKeywords + logicKeywords + assignKeywords + printKeyword + conditionalKeywords + loopKeywords + switchKeywords+ exitKeyword + blockKeywords + builtInFunctionNameKeywords + functionKeywords
+    private val statementKeywords = assignKeywords + printKeyword + conditionalKeywords + loopKeywords + switchKeywords+ exitKeyword + blockKeywords
 
-    fun getWordType(word: String): TokenType? {
-        return allKeywords[word]
-    }
+    fun getWordType(word: String): TokenType? = allKeywords[word]
+    fun getFunctionKeyword(): Collection<TokenType> = builtInFunctionNameKeywords.values
+    fun isStatementKeyword(type: TokenType): Boolean = type in statementKeywords.values
 }

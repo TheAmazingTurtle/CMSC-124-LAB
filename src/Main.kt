@@ -2,11 +2,31 @@
 // fix project sdk and module sdk
 // and set to 21 in project structure settings
 
-fun main(){
+fun main(args: Array<String>) {
     val lexer = Lexer()
     val parser = Parser()
-    val env = Environment()
-    val evaluator = Evaluator(env)
+    val environment = Environment()
+    val evaluator = Evaluator(environment)
+
+    if (args.isNotEmpty()) {
+        val filePath = args[0]
+        val lines = java.io.File(filePath).readLines()
+
+        for ((index, line) in lines.withIndex()) {
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) continue
+
+            try {
+                val tokens = lexer.getTokensFromLine(trimmed, index+1, true)
+                val parseTree = parser.getParseTree(tokens)
+                evaluator.evaluateParseTree(parseTree)
+            } catch (e: Exception) {
+                println("Error in file: ${e.message}")
+                return
+            }
+        }
+        return
+    }
 
     while (true) {
         print("> ")
@@ -15,16 +35,12 @@ fun main(){
 
         try {
             val tokens = lexer.getTokensFromLine(userInput)
-            tokens.forEach { println(it) }
-
             val parseTree = parser.getParseTree(tokens)
-            println(parseTree)
-
-            val result = evaluator.getValueOfParseTree(parseTree)
-            println(result)
+            evaluator.evaluateParseTree(parseTree)
         } catch (e: Exception) {
             println(e.message)
         }
-
     }
 }
+
+

@@ -1,12 +1,16 @@
 class Lexer {
     private var sourceLine = ""
     private var index = 0
-    private var lineNumber = 1
-    private var errorMsg: String? = null
+    private var lineNumber = 0
     private var isMultilineCommentActive = false
 
-    fun getTokensFromLine (userInput: String): List<Token> {
-        setupLexer(userInput)
+    fun getTokensFromLine(sourceLine: String, lineNumber: Int = 1, multilineCommentPersists: Boolean = false): List<Token> {
+        this.index = 0
+        this.sourceLine = sourceLine
+        this.lineNumber = lineNumber
+
+        if (!multilineCommentPersists)
+            this.isMultilineCommentActive = false
 
         val tokenList = mutableListOf<Token>()
 
@@ -137,13 +141,6 @@ class Lexer {
             }
         }
 
-    }
-
-    private fun setupLexer(sourceLine: String) {
-        this.sourceLine = sourceLine
-        this.errorMsg = null
-        this.isMultilineCommentActive = false
-        index = 0
     }
 
     private fun getCurChar(): Char = sourceLine[index]

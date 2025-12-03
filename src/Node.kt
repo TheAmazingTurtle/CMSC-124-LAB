@@ -4,6 +4,15 @@ sealed class Node {
     data class Literal(val value: Any, val lineNumber: Int): Node() {
         override fun toString(): String = "$value"
     }
+
+    data class Variable(val name: String, val lineNumber: Int): Node() {
+        override fun toString(): String = name
+    }
+
+    data class Function(val name: TokenType, val parameter: List<Node>, val lineNumber: Int): Node() {
+        override fun toString(): String = "$name(${parameter.joinToString()})"
+    }
+
     data class Unary(val operator: Operator, val childNode: Node): Node() {
         override fun toString(): String = "($operator $childNode)"
     }

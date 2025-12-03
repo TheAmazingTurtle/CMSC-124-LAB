@@ -2,31 +2,54 @@ class Evaluator (private val environment: Environment){
     private var activeLineNumber = -1
     private val errorMsg = mutableListOf<String>()
 
-    fun getValueOfParseTree(parseTree: ParseTree): Any {
+    fun evaluateParseTree(parseTree: ParseTree) {
         errorMsg.clear()
         val rootNode = parseTree.rootNode
-        return when(rootNode){
-            is Node -> getValueOfNode((rootNode))
-            is Stmt -> {
-                executeStatement(rootNode)
-            }
-            else -> throw Exception(createErrorMsg("Unknown statement and expression type"))
-        }
+        if (rootNode is Statement)
+            executeStatement(rootNode)
+        else
+            throw Exception(createErrorMsg("Expecting statement"))
+
     }
+
+//    fun getValueOfParseTree(parseTree: ParseTree): Any {
+//        errorMsg.clear()
+//        return when(val rootNode = parseTree.rootNode){
+//            is Node -> getValueOfNode((rootNode))
+//            is Statement -> {
+//                executeStatement(rootNode)
+//            }
+//            else -> throw Exception(createErrorMsg("Unknown statement and expression type"))
+//        }
+//    }
 
     private fun getValueOfNode(node: Node): Any{
         return when (node) {
             is Node.Unary -> getValueOfUnaryNode(node)
             is Node.Binary -> getValueOfBinaryNode(node)
             is Node.Group -> getValueOfNode(node.childNode)
+            is Node.Function -> {
+                activeLineNumber = node.lineNumber
+                when (node.name) {
+                    TokenType.CONCAT -> {
+                        val processedParameterList = mutableListOf<Any>()
+                        for (parameter in node.parameter){
+                            processedParameterList.add(getValueOfNode(parameter))
+                        }
+
+                        processedParameterList.joinToString(separator = "");
+                    }
+                    else -> throw Exception(createErrorMsg("Unrecognized function"))
+                }
+
+            }
+            is Node.Variable -> {
+                activeLineNumber = node.lineNumber
+                environment.getValue(node.name) ?: throw Exception(createErrorMsg("Undefined variable ${node.name}"))
+            }
             is Node.Literal -> {
                 activeLineNumber = node.lineNumber
-                val value = node.value
-                if (value is String && value.startsWith("$")){
-                    environment.getName(value) ?: throw Exception(createErrorMsg("Undefined variable $value"))
-                } else {
-                    value
-                }
+                node.value
             }
         }
     }
@@ -101,19 +124,22 @@ class Evaluator (private val environment: Environment){
         return if (isBothValueInt) result.toInt() else result
     }
 
-    private fun executeStatement(stmt: Stmt): Any{
-        return when(stmt){
-            is Stmt.SetVarStmt -> {
-                val value = getValueOfNode(stmt.value)
-                environment.define(stmt.name, value)
-                value
+    private fun executeStatement(statement: Statement) {
+        return when(statement){
+            is Statement.SetVariable -> {
+                val value = getValueOfNode(statement.value)
+                environment.define(statement.name, value)
             }
-            is Stmt.ShowStmt -> {
-                val value = getValueOfNode(stmt.value)
+            is Statement.Show -> {
+                val value = getValueOfNode(statement.value)
                 println(value)
-                value
             }
-
+            is Statement.Block -> {
+                if (statement.enterBlock)
+                    environment.createInnerEnvironment()
+                else
+                    environment.destroyInnerEnvironment()
+            }
         }
     }
 

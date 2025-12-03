@@ -1,11 +1,12 @@
-sealed class Stmt {
-    data class SetVarStmt(val name: String, val value: Node): Stmt()
-    data class ShowStmt(val value: Node): Stmt()
-    data class IfStmt(
-        val condition: Node,
-        val thenBlock: List<Stmt>,
-        val otherwiseBlock: List<Stmt>? = null
-    ): Stmt()
+sealed class Statement{
+    data class SetVariable(val name: String, val value: Node): Statement()
+    data class Show(val value: Node): Statement()
+    data class Block(val enterBlock: Boolean = true): Statement()
+//    data class IfStmt(
+//        val condition: Node,
+//        val thenBlock: List<Stmt>,
+//        val otherwiseBlock: List<Stmt>? = null
+//    ): Stmt()
     //    data class SaveStmt(): Stmt()
     //    data class SetFuncStmt(): Stmt()
     //    data class SetDataStrctStmt(): Stmt()

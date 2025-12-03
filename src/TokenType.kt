@@ -5,15 +5,17 @@ enum class TokenType {
 
     AND, OR, NOT, IS, EQUAL, GREATER, LESS, THAN,
 
-    SET, TO, AS,
+    SET, TO, AS, THIS,
 
-    IF, THEN, OTHERWISE, END,
+    IF, THEN, OTHERWISE, ENDIF,
 
-    WHILE, DO, FOR,
+    WHILE, DO, FOR, END_WHILE, END_FOR,
 
-    BASED, WHEN, ESCAPE,
+    BLOCK, END_BLOCK,
 
-    SHOW,
+    BASED, WHEN, ESCAPE, END_BASED,
+
+    SHOW, QUIT,
 
     COMMA,
 
@@ -21,5 +23,9 @@ enum class TokenType {
 
     INVALID,
 
-    OPEN_PARENTHESIS, CLOSE_PARENTHESIS
+    OPEN_PARENTHESIS, CLOSE_PARENTHESIS,
+
+    USING, ONLY,
+
+    CONCAT
 }
