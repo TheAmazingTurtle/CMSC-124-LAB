@@ -7,7 +7,7 @@ enum class TokenType {
 
     SET, TO, AS, THIS,
 
-    IF, THEN, OTHERWISE, ENDIF,
+    IF, THEN, OTHERWISE, END_IF,
 
     WHILE, DO, FOR, END_WHILE, END_FOR,
 

@@ -1,4 +1,8 @@
 import kotlin.collections.listOf
+//if else
+// while
+// for
+// functions
 
 class Parser {
     private var tokenList = listOf<Token>()
@@ -24,6 +28,7 @@ class Parser {
         return when (getCurToken().type){
             TokenType.SET -> parseSetVarStatement()
             TokenType.SHOW -> parseShowStatement()
+            TokenType.IF -> parseIfStatement()
             TokenType.BLOCK -> {
                 consumeToken()
                 expectToken(TokenType.EOL)
@@ -36,9 +41,38 @@ class Parser {
                 consumeToken()
                 Statement.Block(enterBlock = false)
             }
+            in KeywordRegistry.getEndKeywords() -> {
+                val tokenType = getCurToken().type
+                consumeToken()
+                expectToken(TokenType.EOL)
+                consumeToken()
+                Statement.EndIf()
+            }
             else -> throw Exception(createErrorMsg("Expected statement"))
          }
     }
+
+
+    private fun parseIfStatement(): Statement{
+        consumeToken()
+        val ifStatement = Statement.If(parseExpression())
+        expectToken(TokenType.THEN)
+        consumeToken()
+        return ifStatement
+    }
+
+    private fun parseOtherwiseStatement(): Statement{
+        consumeToken()
+        if(getCurToken().type == TokenType.EOL) return Statement.Otherwise(null)
+
+        expectToken(TokenType.IF)
+        consumeToken()
+        val otherwiseIfStatement = Statement.OtherwiseIf(parseExpression())
+        expectToken(TokenType.THEN)
+        consumeToken()
+        return otherwiseIfStatement
+    }
+
 
     private fun parseSetVarStatement(): Statement {
         consumeToken()

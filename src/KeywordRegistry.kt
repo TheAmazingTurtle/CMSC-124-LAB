@@ -44,7 +44,7 @@ object KeywordRegistry {
         "if" to TokenType.IF,
         "then" to TokenType.THEN,
         "otherwise" to TokenType.OTHERWISE,
-        "end_if" to TokenType.ENDIF,
+        "end_if" to TokenType.END_IF,
     )
 
     private val loopKeywords = mapOf(
@@ -71,10 +71,15 @@ object KeywordRegistry {
         "only" to TokenType.ONLY
     )
 
+    private val endKeywords = setOf(
+        TokenType.END_IF, TokenType.END_FOR, TokenType.END_WHILE, TokenType.END_BASED
+    )
+
     private val allKeywords = arithmeticKeywords + logicKeywords + assignKeywords + printKeyword + conditionalKeywords + loopKeywords + switchKeywords+ exitKeyword + blockKeywords + builtInFunctionNameKeywords + functionKeywords
     private val statementKeywords = assignKeywords + printKeyword + conditionalKeywords + loopKeywords + switchKeywords+ exitKeyword + blockKeywords
 
     fun getWordType(word: String): TokenType? = allKeywords[word]
     fun getFunctionKeyword(): Collection<TokenType> = builtInFunctionNameKeywords.values
     fun isStatementKeyword(type: TokenType): Boolean = type in statementKeywords.values
+    fun getEndKeywords(): Set<TokenType> = endKeywords
 }

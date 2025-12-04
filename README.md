@@ -232,7 +232,7 @@
 
        for each $item in $numbers do
            show $item
-       end
+       end_for
 
 11. **WHILE LOOP**
 
@@ -240,7 +240,7 @@
         while $index is less than 10 do
               show $index
               set $index to $index added by 1
-        end
+        end_while
 
 13. **DO WHILE LOOP**
 
@@ -258,7 +258,7 @@
              show "Mid”
         otherwise
              show "Low"**
-        end
+        end_if
 
 13. **BASED ON**
 
@@ -272,7 +272,7 @@
               otherwise 
                    set $discount to 0
                    escape
-        end
+        end_based
 
 15. **CREATING A TABLE**
    - Either row/rows and column/columns can be used.

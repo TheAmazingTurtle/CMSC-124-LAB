@@ -1,6 +1,7 @@
 class Evaluator (private val environment: Environment){
     private var activeLineNumber = -1
     private val errorMsg = mutableListOf<String>()
+    private var activeControlStructStack = mutableListOf<ControlStruct>()
 
     fun evaluateParseTree(parseTree: ParseTree) {
         errorMsg.clear()
@@ -125,7 +126,34 @@ class Evaluator (private val environment: Environment){
     }
 
     private fun executeStatement(statement: Statement) {
-        return when(statement){
+        if (activeControlStructStack.last() is ControlStruct.If){
+            val currentIfStruct = activeControlStructStack.last() as ControlStruct.If
+
+            when(statement) {
+                is Statement.OtherwiseIf -> {
+                    if (currentIfStruct.conditionSatisfied) return
+                    else if (!currentIfStruct.trueBlockExecuted) currentIfStruct.trueBlockExecuted = true
+
+                    val value = getValueOfNode(statement.expression)
+                    if (value !is Boolean) throw Exception(createErrorMsg("Expecting boolean result from expression"))
+                    if (value) currentIfStruct.conditionSatisfied = true
+                    return
+                }
+                is Statement.Otherwise ->  {
+                    if(!currentIfStruct.conditionSatisfied) currentIfStruct.conditionSatisfied = true
+                    else if (!currentIfStruct.trueBlockExecuted) currentIfStruct.trueBlockExecuted = true
+                    return
+                }
+                is Statement.EndIf -> {
+                    environment.destroyInnerEnvironment()
+                    activeControlStructStack.removeLast()
+                    return
+                }
+                else -> {}
+            }
+        }
+
+        when(statement){
             is Statement.SetVariable -> {
                 val value = getValueOfNode(statement.value)
                 environment.define(statement.name, value)
@@ -140,6 +168,22 @@ class Evaluator (private val environment: Environment){
                 else
                     environment.destroyInnerEnvironment()
             }
+            is Statement.If -> {
+                activeControlStructStack.add(ControlStruct.If())
+                environment.createInnerEnvironment()
+
+                val value = getValueOfNode(statement.expression)
+                if (value !is Boolean) throw Exception(createErrorMsg("Expecting boolean result from expression"))
+
+                val currentIfStruct = activeControlStructStack.last() as ControlStruct.If
+                if (value) currentIfStruct.conditionSatisfied = true
+            }
+
+            is Statement.OtherwiseIf -> throw Exception(createErrorMsg("Missing initial if-statement"))
+            is Statement.Otherwise -> throw Exception(createErrorMsg("Missing initial if-statement"))
+            is Statement.EndIf -> throw Exception(createErrorMsg("Missing initial if-statement"))
+
+            else -> throw Exception(createErrorMsg("Unexpected statement"))
         }
     }
 
