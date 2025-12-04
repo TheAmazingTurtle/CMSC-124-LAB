@@ -126,31 +126,75 @@ class Evaluator (private val environment: Environment){
     }
 
     private fun executeStatement(statement: Statement) {
-        if (activeControlStructStack.last() is ControlStruct.If){
-            val currentIfStruct = activeControlStructStack.last() as ControlStruct.If
+        if (activeControlStructStack.isNotEmpty()) {
+            when(activeControlStructStack.last()) {
+                is ControlStruct.If -> {
+                    val currentIfStruct = activeControlStructStack.last() as ControlStruct.If
 
-            when(statement) {
-                is Statement.OtherwiseIf -> {
-                    if (currentIfStruct.conditionSatisfied) return
-                    else if (!currentIfStruct.trueBlockExecuted) currentIfStruct.trueBlockExecuted = true
+                    when(statement) {
+                        is Statement.OtherwiseIf -> {
+                            if (currentIfStruct.otherwiseSeen) throw Exception(createErrorMsg("Improper if structure"))
+                            if (currentIfStruct.conditionSatisfied) {
+                                if (!currentIfStruct.trueBlockExecuted) currentIfStruct.trueBlockExecuted = true
+                                return
+                            }
 
-                    val value = getValueOfNode(statement.expression)
-                    if (value !is Boolean) throw Exception(createErrorMsg("Expecting boolean result from expression"))
-                    if (value) currentIfStruct.conditionSatisfied = true
-                    return
+                            val value = getValueOfNode(statement.expression)
+                            if (value !is Boolean) throw Exception(createErrorMsg("Expecting boolean result from expression"))
+                            if (value) currentIfStruct.conditionSatisfied = true
+                            return
+                        }
+                        is Statement.Otherwise ->  {
+                            if (currentIfStruct.otherwiseSeen) throw Exception(createErrorMsg("Improper if structure"))
+                            currentIfStruct.otherwiseSeen = true
+                            if (currentIfStruct.conditionSatisfied) {
+                                if (!currentIfStruct.trueBlockExecuted) currentIfStruct.trueBlockExecuted = true
+                                return
+                            }
+
+                            currentIfStruct.conditionSatisfied = true
+                            return
+                        }
+                        is Statement.EndIf -> {
+                            environment.destroyInnerEnvironment()
+                            activeControlStructStack.removeLast()
+                            return
+                        }
+                        else -> {
+                            if(!currentIfStruct.conditionSatisfied || currentIfStruct.trueBlockExecuted) return
+                        }
+                    }
                 }
-                is Statement.Otherwise ->  {
-                    if(!currentIfStruct.conditionSatisfied) currentIfStruct.conditionSatisfied = true
-                    else if (!currentIfStruct.trueBlockExecuted) currentIfStruct.trueBlockExecuted = true
+
+                is ControlStruct.While -> {
+                    val currentWhileStruct = activeControlStructStack.last() as ControlStruct.While
+
+                    if (statement is Statement.EndWhile) {
+                        currentWhileStruct.recordingDone = true
+
+                        val recorded = ArrayList(currentWhileStruct.statementRecord)
+                        var condValue = getValueOfNode(currentWhileStruct.booleanCondition)
+                        if (condValue !is Boolean) {
+                            throw Exception(createErrorMsg("Expecting boolean result from while condition"))
+                        }
+                        while ((condValue as? Boolean) == true) {
+                            for (statement in recorded){
+                                executeStatement(statement)
+                            }
+
+                            condValue = getValueOfNode(currentWhileStruct.booleanCondition)
+                            if (condValue !is Boolean) {
+                                throw Exception(createErrorMsg("Expecting boolean result from while condition"))
+                            }
+                        }
+                    } else {
+                        currentWhileStruct.statementRecord.add(statement)
+                    }
                     return
+
                 }
-                is Statement.EndIf -> {
-                    environment.destroyInnerEnvironment()
-                    activeControlStructStack.removeLast()
-                    return
-                }
-                else -> {}
             }
+
         }
 
         when(statement){
@@ -179,9 +223,15 @@ class Evaluator (private val environment: Environment){
                 if (value) currentIfStruct.conditionSatisfied = true
             }
 
+            is Statement.While -> {
+                activeControlStructStack.add(ControlStruct.While(statement.expression))
+                environment.createInnerEnvironment()
+            }
+
             is Statement.OtherwiseIf -> throw Exception(createErrorMsg("Missing initial if-statement"))
             is Statement.Otherwise -> throw Exception(createErrorMsg("Missing initial if-statement"))
             is Statement.EndIf -> throw Exception(createErrorMsg("Missing initial if-statement"))
+            is Statement.EndWhile -> throw Exception(createErrorMsg("Missing initial while-statement"))
 
             else -> throw Exception(createErrorMsg("Unexpected statement"))
         }

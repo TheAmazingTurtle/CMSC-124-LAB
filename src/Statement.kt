@@ -10,6 +10,8 @@ sealed class Statement{
     data class OtherwiseIf(val expression: Node): Statement()
     data class Otherwise(val expression: Nothing?): Statement()
     data class EndIf(val content: Nothing? = null):Statement()
+    data class While(val expression: Node): Statement()
+    data class EndWhile(val content: Nothing? = null):Statement()
 //    data class WhileStmt(): Stmt()
 //    data class ForStmt(): Stmt()
 

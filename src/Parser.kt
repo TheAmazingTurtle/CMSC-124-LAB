@@ -29,6 +29,8 @@ class Parser {
             TokenType.SET -> parseSetVarStatement()
             TokenType.SHOW -> parseShowStatement()
             TokenType.IF -> parseIfStatement()
+            TokenType.WHILE -> parseWhileStatement()
+            TokenType.OTHERWISE -> parseOtherwiseStatement()
             TokenType.BLOCK -> {
                 consumeToken()
                 expectToken(TokenType.EOL)
@@ -41,15 +43,31 @@ class Parser {
                 consumeToken()
                 Statement.Block(enterBlock = false)
             }
-            in KeywordRegistry.getEndKeywords() -> {
-                val tokenType = getCurToken().type
+            TokenType.END_IF -> {
                 consumeToken()
                 expectToken(TokenType.EOL)
                 consumeToken()
                 Statement.EndIf()
             }
-            else -> throw Exception(createErrorMsg("Expected statement"))
+            TokenType.END_WHILE -> {
+                consumeToken()
+                expectToken(TokenType.EOL)
+                consumeToken()
+                Statement.EndIf()
+            }
+            else -> {
+                throw Exception(createErrorMsg("Expected statement"))
+            }
          }
+    }
+
+    private fun parseWhileStatement(): Statement{
+        consumeToken()
+        val whileStatement = Statement.While(parseExpression())
+        expectToken(TokenType.DO)
+        consumeToken()
+        expectToken(TokenType.EOL)
+        return whileStatement
     }
 
 
@@ -58,6 +76,7 @@ class Parser {
         val ifStatement = Statement.If(parseExpression())
         expectToken(TokenType.THEN)
         consumeToken()
+        expectToken(TokenType.EOL)
         return ifStatement
     }
 
@@ -70,6 +89,7 @@ class Parser {
         val otherwiseIfStatement = Statement.OtherwiseIf(parseExpression())
         expectToken(TokenType.THEN)
         consumeToken()
+        expectToken(TokenType.EOL)
         return otherwiseIfStatement
     }
 
@@ -85,13 +105,16 @@ class Parser {
         expectToken(TokenType.TO)
         consumeToken()
 
+
         val valueNode = parseExpression()
+        expectToken(TokenType.EOL)
         return Statement.SetVariable(identifierName, valueNode)
     }
 
     private fun parseShowStatement(): Statement.Show {
         consumeToken()
         val valueNode = parseExpression()
+        expectToken(TokenType.EOL)
         return Statement.Show(valueNode)
     }
 

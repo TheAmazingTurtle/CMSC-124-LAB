@@ -1,1 +1,8 @@
-show "true"
+set $total to 2000
+if $total is greater than 1000 then
+     show "High"
+otherwise if $total is greater than 300 and $total is less than 700 then
+     show "Mid"
+otherwise
+     show "Low"
+end_if
