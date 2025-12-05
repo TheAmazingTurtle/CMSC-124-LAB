@@ -1,18 +1,17 @@
 # ExQL
 *Excel-Inspired Query Language*
 
-
-**CREATOR**
+## Creator
 
 >Kent Francis E. Genilo (TheAmazingTurtle)
 
 >Jasmine G. Magadan (Jas-1005)
 
-**LANGUAGE OVERVIEW**
+## Language Overview
 
 >This is a natural-language-inspired programming language designed for processing CSV files. It takes inspiration from Excel and uses a declarative style to simplify accounting tasks.
 
-**KEYWORDS**
+## Keywords
 1. **Data Import and Manipulation**
    - `load` - imports data from a CSV file into a collection
    - `save` - exports a collection or table to a CSV file
@@ -107,7 +106,7 @@
    - `mxn` - attached to a value to specify that it is in Mexican Pesos
    - `myr` - attached to a value to specify that it is in Malaysian Ringgit
 
-**OPERATORS**
+## Operators
 1. **Assignment**
    - `set` … `as` - declares a variable, array, list, set, or function and optionally assigns it a value
 <br><br>
@@ -129,7 +128,7 @@
    - `is less than` - returns true if the left value is smaller than the right value
    - `is less than or equal to` - returns true if the left value is smaller than the right value or equal to the right value
 
-**LITERALS**
+## Literals
 1. **String**- enclosed in double “ ”
       - example :
         
@@ -151,7 +150,7 @@
 
             10php, 5usd, 15eur
 
-**IDENTIFIERS**
+## Identifiers
 1. **General identifiers**
    - Both general variables and column headers start with $. The type is determined by context:
       - General variable names and column header names for table or CSV header must start with $. Example:
@@ -174,7 +173,7 @@
 4. **Function identifiers**
     - functions are declared using *set … as function* and distinguished from variables by the* using* keyword.
 
-**COMMENTS**
+## Comments
    - Nested comments are not allowed. Since the opening symbols (`***`) for block comments are the same as the closing symbols (`***`), any (`***`) inside a block comment will be treated as a block common terminator.
    - For line comment : Start with `#` and continue to the end of the line. 
 
@@ -187,13 +186,13 @@
          comment
     	 ***
 
-**SYNTAX STYLE**
+## Syntax Style
    - Whitespace (tabs, spaces, newlines) is not generally significant, except for separating keywords, identifiers, and values.
    - Statements are terminated by newline and are indented. No need for semicolors and other terminators.
    - Code blocks are delimited by `begin` and `end`
    - Commas (`,`) are used to separate multiple arguments or items in a list and array and the `and` keyword to signify the last item. 
 
-**SAMPLE CODES**
+## Sample Code
 1. **LOADING A FILE**
 
        load $transactions from file “sales.csv”
@@ -286,4 +285,4 @@
         insert 3 columns after @Profit
 
 
-**Design Rationale**
+## Design Rationale
