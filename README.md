@@ -1,4 +1,5 @@
-# CMSC-124-LAB
+# ExQL
+*Excel-Inspired Query Language*
 
 
 **CREATOR**
