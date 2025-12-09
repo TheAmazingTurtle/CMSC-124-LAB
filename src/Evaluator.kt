@@ -114,8 +114,10 @@ class Evaluator (private val environment: Environment){
         }
     }
 
+
     private fun getValueOfNode(node: Node): Any{
         return when (node) {
+            is Node.Currency -> node
             is Node.Unary -> getValueOfUnaryNode(node)
             is Node.Binary -> getValueOfBinaryNode(node)
             is Node.Group -> getValueOfNode(node.childNode)

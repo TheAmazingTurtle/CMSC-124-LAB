@@ -208,6 +208,11 @@ class Parser {
 
     private fun literalValue(): Node {
         val node = when (getCurToken().type) {
+            in KeywordRegistry.getCurrencyKeyword() -> {
+                val literal = getCurToken().literal as Number
+                Node.Currency(literal.toDouble(), getCurToken().type, getCurToken().lineNumber)
+            }
+
             in setOf(TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN) -> {
                 val literal = getCurToken().literal
                 Node.Literal(literal, getCurToken().lineNumber)

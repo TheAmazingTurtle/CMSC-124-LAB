@@ -89,13 +89,31 @@ class Lexer {
         return wordToken
     }
 
+
     private fun formNumberToken(): Token {
         val lexemeStartingIndex = index
         var seenDot = false
 
         while (hasMoreChars()) {
             when {
-                getCurChar().isLetter() -> throw Exception(createErrorMsg("Improper number format"))
+                getCurChar().isLetter() -> {
+                    var denomination = ""
+                    for (i in 0..2){
+                        if(!hasMoreChars()) throw Exception(createErrorMsg("Invalid currency code"))
+                        denomination += getCurChar()
+                        consumeChar()
+                    }
+
+                    if(hasMoreChars() && !getCurChar().isWhitespace()) throw Exception(createErrorMsg("Invalid currency code"))
+                    val type = KeywordRegistry.getCurrencyType(denomination) ?:  throw Exception(createErrorMsg("Invalid denomination"))
+                    val codeLexeme = sourceLine.substring(lexemeStartingIndex, index)
+                    val amountLexeme = sourceLine.substring(lexemeStartingIndex, index - 3)
+                    val literal =  if (seenDot) amountLexeme.toDouble() else amountLexeme.toDouble()
+                    val rate = CurrencyRate.getCurrencyMultiplier(type) ?: throw Exception(createErrorMsg("Unknown currency code"))
+                    val convertedLexeme = literal * rate
+                    val currencyToken = Token(type, codeLexeme, convertedLexeme, lineNumber)
+                    return currencyToken
+                }
                 getCurChar().isDigit()  -> {}    // skip
                 getCurChar() == '.'     -> {
                     if (seenDot) throw Exception(createErrorMsg("Improper number format"))

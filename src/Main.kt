@@ -14,6 +14,7 @@ fun main(args: Array<String>) {
 
             try {
                 val tokens = lexer.getTokensFromLine(trimmed, index+1, true)
+
                 val parseTree = parser.getParseTree(tokens)
                 evaluator.evaluateParseTree(parseTree)
             } catch (e: Exception) {
@@ -31,11 +32,13 @@ fun main(args: Array<String>) {
 
         try {
             val tokens = lexer.getTokensFromLine(userInput)
+            for (token in tokens) println(token)
             val parseTree = parser.getParseTree(tokens)
             evaluator.evaluateParseTree(parseTree)
         } catch (e: Exception) {
             println(e.message)
         }
+
     }
 }
 
