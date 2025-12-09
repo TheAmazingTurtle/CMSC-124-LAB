@@ -14,11 +14,7 @@ class Parser {
 
         if (getCurToken().type == TokenType.EOL) throw Exception(createErrorMsg("Empty expression"))
 
-        val rootNode =
-            if (KeywordRegistry.isStatementKeyword(getCurToken().type))
-                parseStatement()
-            else
-                parseExpression()
+        val rootNode = parseStatement()
         return ParseTree(rootNode)
     }
 
@@ -26,10 +22,10 @@ class Parser {
 //    fun getErrorMsgList(): List<String> = errorMsg.toList()
     private fun parseStatement(): Statement {
         return when (getCurToken().type){
-            TokenType.SET -> parseSetVarStatement()
+            TokenType.SET -> parseSetStatement()
             TokenType.SHOW -> parseShowStatement()
             TokenType.IF -> parseIfStatement()
-            TokenType.WHILE -> parseWhileStatement()
+//            TokenType.WHILE -> parseWhileStatement()
             TokenType.OTHERWISE -> parseOtherwiseStatement()
             TokenType.BLOCK -> {
                 consumeToken()
@@ -37,23 +33,10 @@ class Parser {
                 consumeToken()
                 Statement.Block()
             }
-            TokenType.END_BLOCK -> {
-                consumeToken()
+            TokenType.END_BLOCK, TokenType.END_WHILE, TokenType.END_IF -> {
+                val endType = consumeToken().type
                 expectToken(TokenType.EOL)
-                consumeToken()
-                Statement.Block(enterBlock = false)
-            }
-            TokenType.END_IF -> {
-                consumeToken()
-                expectToken(TokenType.EOL)
-                consumeToken()
-                Statement.EndIf()
-            }
-            TokenType.END_WHILE -> {
-                consumeToken()
-                expectToken(TokenType.EOL)
-                consumeToken()
-                Statement.EndIf()
+                Statement.End(endType)
             }
             else -> {
                 throw Exception(createErrorMsg("Expected statement"))
@@ -61,17 +44,17 @@ class Parser {
          }
     }
 
-    private fun parseWhileStatement(): Statement{
-        consumeToken()
-        val whileStatement = Statement.While(parseExpression())
-        expectToken(TokenType.DO)
-        consumeToken()
-        expectToken(TokenType.EOL)
-        return whileStatement
-    }
+//    private fun parseWhileStatement(): Statement{
+//        consumeToken()
+//        val whileStatement = Statement.While(parseExpression())
+//        expectToken(TokenType.DO)
+//        consumeToken()
+//        expectToken(TokenType.EOL)
+//        return whileStatement
+//    }
 
 
-    private fun parseIfStatement(): Statement{
+    private fun parseIfStatement(): Statement {
         consumeToken()
         val ifStatement = Statement.If(parseExpression())
         expectToken(TokenType.THEN)
@@ -80,9 +63,9 @@ class Parser {
         return ifStatement
     }
 
-    private fun parseOtherwiseStatement(): Statement{
+    private fun parseOtherwiseStatement(): Statement {
         consumeToken()
-        if(getCurToken().type == TokenType.EOL) return Statement.Otherwise(null)
+        if(getCurToken().type == TokenType.EOL) return Statement.Otherwise()
 
         expectToken(TokenType.IF)
         consumeToken()
@@ -94,7 +77,7 @@ class Parser {
     }
 
 
-    private fun parseSetVarStatement(): Statement {
+    private fun parseSetStatement(): Statement {
         consumeToken()
 
         expectToken(TokenType.IDENTIFIER)
@@ -108,10 +91,10 @@ class Parser {
 
         val valueNode = parseExpression()
         expectToken(TokenType.EOL)
-        return Statement.SetVariable(identifierName, valueNode)
+        return Statement.Set(identifierName, valueNode)
     }
 
-    private fun parseShowStatement(): Statement.Show {
+    private fun parseShowStatement(): Statement {
         consumeToken()
         val valueNode = parseExpression()
         expectToken(TokenType.EOL)
@@ -306,7 +289,10 @@ class Parser {
     private fun createErrorMsg(errorContent: String): String = "Parsing Error: $errorContent at line ${getCurToken().lineNumber}"
     private fun hasMoreTokens(): Boolean = index < tokenList.size
     private fun getCurToken(): Token = tokenList[index]
-    private fun consumeToken(numOfTokensToConsume: Int = 1) {
+    private fun consumeToken(): Token {
+        return tokenList[index++]
+    }
+    private fun consumeToken(numOfTokensToConsume: Int) {
         index += numOfTokensToConsume
     }
     private fun expectToken(type: TokenType){

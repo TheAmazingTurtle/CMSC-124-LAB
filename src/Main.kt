@@ -1,7 +1,3 @@
-//if this says kotlin not configured again,
-// fix project sdk and module sdk
-// and set to 21 in project structure settings
-
 fun main(args: Array<String>) {
     val lexer = Lexer()
     val parser = Parser()

@@ -1,5 +1,5 @@
 class ParseTree(
-    val rootNode: Any
+    val rootNode: Statement
 ) {
     override fun toString(): String {
         return "$rootNode"

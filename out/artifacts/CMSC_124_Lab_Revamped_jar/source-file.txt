@@ -1,18 +1,13 @@
-set $greeting to "Hello"
-set $name to "World"
-
-show concat_to_string using $greeting, and concat_to_string using ", ", $name, and "!"
-
-set $x to 10
-set $y to 20
-
 block
-set $x to 5
-show concat_to_string using "Inner x: ", and $x
-show concat_to_string using "Outer y: ", and $y
+    set $x to 5
+    block
+        set $y to 9
+        show $y
+        block
+            set $z to 10
+            show $z
+            show $x
+        end_block
+    end_block
+    show $x
 end_block
-
-show concat_to_string using "Outer x: ", and $x
-
-set $x to $x added by $y
-show concat_to_string using "x + y = ", and $x
