@@ -24,7 +24,15 @@ object KeywordRegistry {
         "set" to TokenType.SET,
         "to" to TokenType.TO,
         "as" to TokenType.AS,
-        "this" to TokenType.THIS
+        "list" to TokenType.LIST,
+        "containing" to TokenType.CONTAINING,
+        "function" to TokenType.FUNCTION,
+        "which" to TokenType.WHICH,
+        "uses" to TokenType.USES,
+        "that" to TokenType.THAT,
+        "does" to TokenType.DOES,
+        "this" to TokenType.THIS,
+        "end_function" to TokenType.END_FUNCTION
     )
 
     private val printKeyword = mapOf(
@@ -67,6 +75,7 @@ object KeywordRegistry {
     )
 
     private val functionKeywords = mapOf(
+        "perform" to TokenType.PERFORM,
         "using" to TokenType.USING,
         "only" to TokenType.ONLY
     )

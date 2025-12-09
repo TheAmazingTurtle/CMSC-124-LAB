@@ -25,7 +25,7 @@ class Parser {
             TokenType.SET -> parseSetStatement()
             TokenType.SHOW -> parseShowStatement()
             TokenType.IF -> parseIfStatement()
-//            TokenType.WHILE -> parseWhileStatement()
+            TokenType.WHILE -> parseWhileStatement()
             TokenType.OTHERWISE -> parseOtherwiseStatement()
             TokenType.BLOCK -> {
                 consumeToken()
@@ -33,25 +33,26 @@ class Parser {
                 consumeToken()
                 Statement.Block()
             }
-            TokenType.END_BLOCK, TokenType.END_WHILE, TokenType.END_IF -> {
+            TokenType.END_BLOCK, TokenType.END_WHILE, TokenType.END_IF, TokenType.END_FUNCTION -> {
                 val endType = consumeToken().type
                 expectToken(TokenType.EOL)
                 Statement.End(endType)
             }
+            TokenType.PERFORM -> parseFunctionCallStatement()
             else -> {
                 throw Exception(createErrorMsg("Expected statement"))
             }
          }
     }
 
-//    private fun parseWhileStatement(): Statement{
-//        consumeToken()
-//        val whileStatement = Statement.While(parseExpression())
-//        expectToken(TokenType.DO)
-//        consumeToken()
-//        expectToken(TokenType.EOL)
-//        return whileStatement
-//    }
+    private fun parseWhileStatement(): Statement{
+        consumeToken()
+        val whileStatement = Statement.While(parseExpression())
+        expectToken(TokenType.DO)
+        consumeToken()
+        expectToken(TokenType.EOL)
+        return whileStatement
+    }
 
 
     private fun parseIfStatement(): Statement {
@@ -76,22 +77,134 @@ class Parser {
         return otherwiseIfStatement
     }
 
+    private fun parseFunctionCallStatement(): Statement {
+        consumeToken()
+
+        expectToken(TokenType.IDENTIFIER)
+        val functionName = getCurToken().lexeme
+        consumeToken()
+
+        val parameter = mutableListOf<Node>()
+        if (getCurToken().type == TokenType.EOL) {
+            return Statement.CallFunction(functionName, parameter)
+        }
+
+        expectToken(TokenType.USING)
+        consumeToken()
+
+        if (getCurToken().type == TokenType.ONLY){
+            consumeToken()
+            parameter.add(parseExpression())
+        } else {
+            while(true) {
+                if (getCurToken().type == TokenType.AND){
+                    consumeToken()
+                    parameter.add(parseExpression())
+                    break
+                }
+                parameter.add(parseExpression())
+                expectToken(TokenType.COMMA)
+                consumeToken()
+            }
+        }
+
+        return Statement.CallFunction(functionName, parameter)
+    }
+
 
     private fun parseSetStatement(): Statement {
         consumeToken()
 
         expectToken(TokenType.IDENTIFIER)
         if (!getCurToken().lexeme.startsWith('$')) throw Exception(createErrorMsg("Variable name must start with $"))
-        val identifierName = getCurToken().lexeme
-        consumeToken()
 
-        expectToken(TokenType.TO)
-        consumeToken()
+        if (getCurToken().lexeme.startsWith('$')) {
+            val identifierName = getCurToken().lexeme
+            consumeToken()
 
+            when (getCurToken().type) {
+                TokenType.TO -> {
+                    consumeToken()
 
-        val valueNode = parseExpression()
-        expectToken(TokenType.EOL)
-        return Statement.Set(identifierName, valueNode)
+                    val valueNode = parseExpression()
+                    expectToken(TokenType.EOL)
+                    return Statement.Set(identifierName, valueNode)
+                }
+                TokenType.AS -> {
+                    consumeToken()
+
+                    when (getCurToken().type) {
+                        TokenType.LIST -> {
+                            consumeToken()
+                            val list = mutableListOf<Node>()
+
+                            if (getCurToken().type == TokenType.EOL) {
+                                return Statement.SetList(identifierName, list)
+                            }
+
+                            expectToken(TokenType.CONTAINING)
+                            consumeToken()
+
+                            list.add(parseExpression())
+                            while (getCurToken().type == TokenType.COMMA) {
+                                consumeToken()
+
+                                if (getCurToken().type == TokenType.AND) {
+                                    consumeToken()
+                                    list.add(parseExpression())
+                                    break
+                                }
+
+                                list.add(parseExpression())
+                            }
+                            return Statement.SetList(identifierName, list)
+                        }
+                        TokenType.FUNCTION -> {
+                            consumeToken()
+
+                            val parameter = mutableListOf<String>()
+
+                            if (getCurToken().type == TokenType.THAT) {
+                                consumeToken()
+
+                                expectToken(TokenType.DOES)
+                                consumeToken()
+
+                                return Statement.Function(identifierName, parameter)
+                            }
+
+                            expectToken(TokenType.WHICH)
+                            consumeToken()
+
+                            expectToken(TokenType.USES)
+                            consumeToken()
+
+                            if (getCurToken().type != TokenType.IDENTIFIER) throw Exception(createErrorMsg("Improper parameter format"))
+                            parameter.add(getCurToken().lexeme)
+                            while (getCurToken().type == TokenType.COMMA) {
+                                consumeToken()
+
+                                if (getCurToken().type == TokenType.AND) {
+                                    consumeToken()
+
+                                    if (getCurToken().type != TokenType.IDENTIFIER) throw Exception(createErrorMsg("Improper parameter format"))
+                                    parameter.add(getCurToken().lexeme)
+                                    break
+                                }
+
+                                if (getCurToken().type != TokenType.IDENTIFIER) throw Exception(createErrorMsg("Improper parameter format"))
+                                parameter.add(getCurToken().lexeme)
+                            }
+                            return Statement.Function(identifierName, parameter)
+                        }
+                        else -> throw Exception(createErrorMsg("Improper Set Statement Format"))
+                    }
+                }
+                else -> throw Exception(createErrorMsg("Improper Set Statement Format"))
+            }
+        } else {
+            throw Exception(createErrorMsg("Variable name must start with $"))
+        }
     }
 
     private fun parseShowStatement(): Statement {

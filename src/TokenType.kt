@@ -5,7 +5,7 @@ enum class TokenType {
 
     AND, OR, NOT, IS, EQUAL, GREATER, LESS, THAN,
 
-    SET, TO, AS, THIS,
+    SET, TO, AS, THIS, LIST, CONTAINING, FUNCTION, WHICH, USES, THAT, DOES, END_FUNCTION,
 
     IF, THEN, OTHERWISE, END_IF,
 
@@ -25,7 +25,7 @@ enum class TokenType {
 
     OPEN_PARENTHESIS, CLOSE_PARENTHESIS,
 
-    USING, ONLY,
+    USING, ONLY, PERFORM,
 
     CONCAT
 }

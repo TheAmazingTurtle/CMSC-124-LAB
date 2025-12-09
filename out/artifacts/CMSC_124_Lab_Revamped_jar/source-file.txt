@@ -1,3 +1,4 @@
+***
 block
     set $x to 5
     block
@@ -11,3 +12,32 @@ block
     end_block
     show $x
 end_block
+
+set $x to 5
+if false then
+    set $x to 10
+otherwise if $x is greater than 10 then
+    set $x to "Hi"
+otherwise if $x is greater than 4 then
+    set $x to "Hello"
+otherwise
+    set $x to "BOOOOM"
+end_if
+show $x
+
+set $i to 0
+while $i is less than 10 do
+   set $i to $i added by 1
+   show $i
+end_while
+
+if true or $i is less than 1 then
+    show "Short Circuit"
+end_if
+***
+
+set $wave_hello as function that does
+    show "Hello"
+end_function
+
+perform $wave_hello

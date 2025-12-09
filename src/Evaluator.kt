@@ -23,6 +23,11 @@ class Evaluator (private val environment: Environment){
             is Statement.If -> ControlStruct.If(compoundStmt.condition)
             is Statement.Block -> ControlStruct.Block()
             is Statement.While -> ControlStruct.While(compoundStmt.condition)
+            is Statement.Function -> {
+                val ctrlStruct = ControlStruct.Function(compoundStmt.name, compoundStmt.parameters)
+                environment.define(ctrlStruct.name, ctrlStruct)
+                ctrlStruct
+            }
         }
 
         if (controlStructStack.isNotEmpty()) {
@@ -40,6 +45,7 @@ class Evaluator (private val environment: Environment){
                 is ControlStruct.If -> TokenType.END_IF
                 is ControlStruct.While -> TokenType.END_WHILE
                 is ControlStruct.Block -> TokenType.END_BLOCK
+                is ControlStruct.Function -> TokenType.END_FUNCTION
             }
 
             if (simpleStmt.endType != expectedEndToken) {
@@ -47,7 +53,7 @@ class Evaluator (private val environment: Environment){
             }
 
             val structuredStatement = popCtrlStruct()
-            if (controlStructStack.isEmpty()) {
+            if (controlStructStack.isEmpty() && structuredStatement !is ControlStruct.Function) {
                 executeControlStruct(structuredStatement)
             }
 
@@ -77,10 +83,12 @@ class Evaluator (private val environment: Environment){
         executeSimpleStatement(simpleStmt)
     }
 
-    private fun performExecutables(executable: Executable){
-        when (executable){
-            is Statement -> executeSimpleStatement(executable)
-            is ControlStruct -> executeControlStruct(executable)
+    private fun performExecutables(executableList: List<Executable>){
+        for (executable in executableList){
+            when (executable){
+                is Statement -> executeSimpleStatement(executable)
+                is ControlStruct -> executeControlStruct(executable)
+            }
         }
     }
 
@@ -88,12 +96,34 @@ class Evaluator (private val environment: Environment){
         environment.createInnerEnvironment()
 
         when (ctrlStruct){
-            is ControlStruct.If -> {}
-            is ControlStruct.While -> {}
-            is ControlStruct.Block -> {
-                for (executable in ctrlStruct.executables) {
-                    performExecutables(executable)
+            is ControlStruct.If -> {
+                for (branch in ctrlStruct.getBranches()){
+                    val conditionValue = getValueOfNode(branch.condition)
+                    if (conditionValue !is Boolean) throw Exception(createErrorMsg("Expression should result to Boolean"))
+                    if (conditionValue){
+                        performExecutables(branch.executables)
+                        break
+                    }
                 }
+            }
+            is ControlStruct.While -> {
+                var conditionValue = getValueOfNode(ctrlStruct.condition)
+                if (conditionValue !is Boolean) throw Exception(createErrorMsg("Expression should result to Boolean"))
+                while (conditionValue as Boolean) {
+
+                    performExecutables(ctrlStruct.executables)
+
+                    conditionValue = getValueOfNode(ctrlStruct.condition)
+                    if (conditionValue !is Boolean) throw Exception(createErrorMsg("Expression should result to Boolean"))
+                }
+            }
+            is ControlStruct.Block -> performExecutables(ctrlStruct.executables)
+            is ControlStruct.Function -> {
+               for (parameter in ctrlStruct.parameterList) {
+                   environment.define(parameter.name, parameter.value)
+               }
+
+                performExecutables(ctrlStruct.executables)
             }
         }
 
@@ -106,9 +136,28 @@ class Evaluator (private val environment: Environment){
                 val value = getValueOfNode(simpleStmt.value)
                 environment.define(simpleStmt.name, value)
             }
+            is Statement.SetList -> {
+                val value = mutableListOf<Any>()
+                for (node in simpleStmt.value) {
+                    value.add(getValueOfNode(node))
+                }
+                environment.define(simpleStmt.name, value)
+            }
             is Statement.Show -> {
                 val value = getValueOfNode(simpleStmt.value)
                 println(value)
+            }
+            is Statement.CallFunction -> {
+                val ctrlStruct = environment.getValue(simpleStmt.name) ?: throw Exception(createErrorMsg("Calling an undefined function"))
+                if (ctrlStruct !is ControlStruct.Function) throw Exception(createErrorMsg("Improperly defined function"))
+
+                if (simpleStmt.parameters.size != ctrlStruct.parameterList.size) throw Exception(createErrorMsg("Parameter and argument mismatch"))
+
+                for (i in 0..<simpleStmt.parameters.size){
+                    ctrlStruct.parameterList[i].value = getValueOfNode(simpleStmt.parameters[i])
+                }
+
+                executeControlStruct(ctrlStruct)
             }
             else -> throw Exception(createErrorMsg("Unexpected statement"))
         }
@@ -158,11 +207,14 @@ class Evaluator (private val environment: Environment){
     }
 
     private fun getValueOfBinaryNode(binaryNode: Node.Binary) : Any {
+        if (binaryNode.operator in OperatorRegistry.logicalOperators) {
+            return executeLogicalOperator(binaryNode.operator, binaryNode.leftNode, binaryNode.rightNode)
+        }
+
         val leftNodeValue = getValueOfNode(binaryNode.leftNode)
         val rightNodeValue = getValueOfNode(binaryNode.rightNode)
 
         return when (binaryNode.operator){
-            in OperatorRegistry.logicalOperators -> executeLogicalOperator(binaryNode.operator, leftNodeValue, rightNodeValue)
             in OperatorRegistry.relationalOperators -> executeRelationalOperator(binaryNode.operator, leftNodeValue, rightNodeValue)
             in OperatorRegistry.arithmeticOperators ->  executeArithmeticOperator(binaryNode.operator, leftNodeValue, rightNodeValue)
 
@@ -173,15 +225,23 @@ class Evaluator (private val environment: Environment){
         }
     }
 
-    private fun executeLogicalOperator(operator: Operator, leftNodeValue: Any, rightNodeValue: Any) : Boolean {
+    private fun executeLogicalOperator(operator: Operator, leftNode: Node, rightNode: Node) : Boolean {
+        val leftNodeValue = getValueOfNode(leftNode)
         val leftVal = leftNodeValue as? Boolean ?: throw Exception(createErrorMsg("Invalid value type, expecting boolean"))
-        val rightVal = rightNodeValue as? Boolean ?: throw Exception(createErrorMsg("Invalid value type, expecting boolean"))
 
-        return when (operator) {
-            Operator.AND -> leftVal && rightVal
-            Operator.OR -> leftVal || rightVal
+        when (operator) {
+            Operator.AND -> {
+                if (!leftVal) return false
+            }
+            Operator.OR -> {
+                if (leftVal) return true
+            }
             else -> throw Exception(createErrorMsg("Unrecognized logical operator"))
         }
+
+        val rightNodeValue = getValueOfNode(rightNode)
+        val rightVal = rightNodeValue as? Boolean ?: throw Exception(createErrorMsg("Invalid value type, expecting boolean"))
+        return rightVal
     }
 
     private fun executeRelationalOperator(operator: Operator, leftNodeValue: Any, rightNodeValue: Any) : Boolean {

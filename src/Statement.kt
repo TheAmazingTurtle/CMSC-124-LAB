@@ -10,6 +10,7 @@ sealed class Statement: Executable() {
     data class Block(val unit: Unit = Unit) : Compound()
     data class While(val condition: Node) : Compound()
     data class If(val condition: Node) : Compound()
+    data class Function(val name: String, val parameters: List<String>) : Compound()
 
     // Branch Extension
     data class OtherwiseIf(val condition: Node) : Statement()
@@ -17,6 +18,8 @@ sealed class Statement: Executable() {
 
     // Simple Statement
     data class Set(val name: String, val value: Node) : Statement()
+    data class SetList(val name: String, val value: MutableList<Node>) : Statement()
     data class Show(val value: Node) : Statement()
+    data class CallFunction(val name: String, val parameters: List<Node>): Statement()
     data class End(val endType: TokenType) : Statement()
 }

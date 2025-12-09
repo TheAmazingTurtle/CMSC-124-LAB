@@ -1,3 +1,4 @@
+import java.lang.reflect.Parameter
 
 sealed class ControlStruct: Executable() {
     abstract fun recordExecutable(executable: Executable)
@@ -10,6 +11,7 @@ sealed class ControlStruct: Executable() {
             getCurBranch().executables.add(executable)
         }
         fun getCurBranch(): Branch = branchList.last()
+        fun getBranches(): List<Branch> = branchList
         fun addBranch(condition: Node) = branchList.add(Branch(condition))
     }
 
@@ -24,4 +26,14 @@ sealed class ControlStruct: Executable() {
              executables.add(executable)
          }
      }
+
+    data class Function(val name: String, val parameterName: List<String>, val executables: MutableList<Executable> = mutableListOf()): ControlStruct() {
+        data class Parameter(val name: String, var value: Any)
+
+        val parameterList = parameterName.map { Parameter(it, Unit) }.toMutableList()
+
+        override fun recordExecutable(executable: Executable) {
+            executables.add(executable)
+        }
+    }
 }
