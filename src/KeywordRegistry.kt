@@ -55,6 +55,17 @@ object KeywordRegistry {
         "end_if" to TokenType.END_IF,
     )
 
+    private val currencyKeywords = mapOf(
+        "php" to TokenType.PHP,
+        "usd" to TokenType.USD,
+        "eur" to TokenType.EUR,
+        "gbp" to TokenType.GBP,
+        "krw" to TokenType.KRW,
+        "jpy" to TokenType.JPY,
+    )
+
+
+
     private val loopKeywords = mapOf(
         "while" to TokenType.WHILE,
         "do" to TokenType.DO,
@@ -89,6 +100,8 @@ object KeywordRegistry {
 
     fun getWordType(word: String): TokenType? = allKeywords[word]
     fun getFunctionKeyword(): Collection<TokenType> = builtInFunctionNameKeywords.values
+    fun getCurrencyType(currency: String):TokenType? = currencyKeywords[currency]
+    fun getCurrencyKeyword(): Collection<TokenType> =  currencyKeywords.values
     fun isStatementKeyword(type: TokenType): Boolean = type in statementKeywords.values
     fun getEndKeywords(): Set<TokenType> = endKeywords
 }

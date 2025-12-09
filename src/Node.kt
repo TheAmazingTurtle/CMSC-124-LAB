@@ -1,6 +1,10 @@
 sealed class Node {
     abstract override fun toString(): String
 
+    data class Currency(val value: Double, val code: TokenType, val lineNumber: Int): Node() {
+        override fun toString(): String = "$value$code"
+    }
+
     data class Literal(val value: Any, val lineNumber: Int): Node() {
         override fun toString(): String = "$value"
     }
